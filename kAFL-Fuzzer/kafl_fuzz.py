@@ -26,8 +26,8 @@ def main():
         for line in f:
             print(line.replace("\n", ""))
 
-    print("<< " + common.color.BOLD + common.color.OKGREEN +
-            sys.argv[0] + ": Kernel Fuzzer " + common.color.ENDC + ">>\n")
+    """ print("<< " + common.color.BOLD + common.color.OKGREEN +
+            sys.argv[0] + ": Kernel Fuzzer " + common.color.ENDC + ">>\n") """
 
     if not self_check(KAFL_ROOT):
         return 1

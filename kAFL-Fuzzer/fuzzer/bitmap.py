@@ -141,8 +141,18 @@ class BitmapStorage:
         return False
 
     def should_send_to_master(self, exec_result):
+        # debug
+        exit_reason = ''
+        if exec_result.exit_reason == 'crash':
+            exit_reason = 'crash'
+
         relevant_bitmap = self.get_bitmap_for_node_type(exec_result.exit_reason)
         new_bytes, new_bits = relevant_bitmap.get_new_byte_and_bit_counts(exec_result)
+
+        """ if exit_reason == 'crash':
+            print('[PYTHON] new_bytes: ' + str(new_bytes))
+            print('[PYTHON] new_bits: ' + str(new_bits)) """
+
         return self.check_storage_logic(exec_result, new_bytes, new_bits)
 
     def should_store_in_queue(self, exec_result):

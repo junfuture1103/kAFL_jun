@@ -1,3 +1,4 @@
+linux-5.7.3/*
 *.a
 *.aux
 *.cp
@@ -37,7 +38,5 @@ TAGS
 .gdb_history
 *plog.pb-c.c
 *plog.pb-c.h
-
 linux.qcow2
 snapshot/*
-linux-5.7.3/*

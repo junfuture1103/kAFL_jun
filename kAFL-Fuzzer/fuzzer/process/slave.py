@@ -231,6 +231,11 @@ class SlaveProcess:
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash = self.execution_exited_abnormally()
 
+        # debug
+        if crash:
+            print('[PYTHON] Crash detected! Terminate fuzzer to debug...')
+            time.sleep(6000)    # Press Ctrl+C to quit fuzzer
+
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic
         if is_new_input:

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sed -i '/qemu-5.0.0/c\qemu_kafl_location = /home/'"$HOME"'/kAFL/qemu-5.0.0/x86_64-softmmu/qemu-system-x86_64' ~/kAFL/kAFL-Fuzzer/kafl.ini
+sed -i '/qemu-5.0.0/c\qemu_kafl_location = '"$HOME"'/kAFL/qemu-5.0.0/x86_64-softmmu/qemu-system-x86_64' ~/kAFL/kAFL-Fuzzer/kafl.ini
 
 mkdir ~/kAFL/snapshot
 cd ~/kAFL/snapshot

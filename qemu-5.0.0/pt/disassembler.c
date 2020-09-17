@@ -550,6 +550,7 @@ static inline cofi_list* get_obj(disassembler_t* self, uint64_t entry_point, tnt
 	cofi_list *tmp_obj;
 	//if (!count_tnt(tnt_cache_state))
 	//	return NULL;
+
 	if (out_of_bounds(self, entry_point)){
 		/* debug */
 		return NULL;
@@ -684,6 +685,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 						/* debug */
 						debug_flow("obj->cofi.target_addr: %p", obj->cofi.target_addr);
 
+						obj->cofi.target_addr |= 0xFFFFFFFF00000000;
 						self->handler(obj->cofi.target_addr);
 						
 						if(!obj->cofi_target_ptr){
@@ -692,10 +694,10 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 							 */
 							/* Temporal Workaround
 							 *
-							 * extend cofi_target_addr to 64-bit address size
+							 * extend obj->cofi_target_addr to 64-bit address size
 							 * to pass the out of bounds test
 							 */ 
-							obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+							/* obj->cofi.target_addr |= 0xFFFFFFFF00000000; */
 
 							obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
 						}
