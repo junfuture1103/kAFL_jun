@@ -94,7 +94,9 @@ static inline uint64_t mix_bits(uint64_t v) {
 /* handler */
 void pt_bitmap(uint64_t addr){
 	/* debug */
+	#ifdef QEMU_DEBUG_FLOW
 	debug_flow("pt_bitmap(addr=%p) called.", addr);
+	#endif
 
 	uint32_t transition_value = 0;
 	#ifdef SAMPLE_DECODED

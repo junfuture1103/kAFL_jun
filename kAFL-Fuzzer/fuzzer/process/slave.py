@@ -27,6 +27,8 @@ from fuzzer.state_logic import FuzzingStateLogic
 from fuzzer.statistics import SlaveStatistics
 from fuzzer.technique.helper import rand
 
+# debug
+from debug.log import debug
 
 def slave_loader(slave_id):
 
@@ -226,15 +228,10 @@ class SlaveProcess:
     def execute(self, data, info):
         self.statistics.event_exec()
 
-        exec_res = self.__execute(data)
+        exec_res = self.__execute(data)     # returns ExecutionResult
 
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash = self.execution_exited_abnormally()
-
-        # debug
-        if crash:
-            print('[PYTHON] Crash detected! Terminate fuzzer to debug...')
-            time.sleep(6000)    # Press Ctrl+C to quit fuzzer
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic
@@ -252,6 +249,10 @@ class SlaveProcess:
                     #exec_res.exit_reason = 'funky'
                     #self.__send_to_master(data, exec_res, info)
             if crash or valid:
+                # debug
+                if crash:
+                    debug("Crash detected!")
+
                 self.__send_to_master(data, exec_res, info)
         else:
             if crash:

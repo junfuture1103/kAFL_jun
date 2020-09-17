@@ -24,6 +24,8 @@ from fuzzer.technique.redqueen.cmp import enable_hammering
 from fuzzer.bitmap import BitmapStorage
 from fuzzer.node import QueueNode
 
+# debug
+from debug.log import debug_kafl
 
 class MasterProcess:
 
@@ -52,7 +54,7 @@ class MasterProcess:
         imports = glob.glob(self.config.argument_values['work_dir'] + "/imports/*")
         if imports:
             path = imports.pop()
-            print("Importing payload from %s" % path)
+            debug_kafl("Importing payload from %s\n" % path)
             seed = read_binary_file(path)
             os.remove(path)
             return self.comm.send_import(conn, {"type": "import", "payload": seed})

@@ -529,11 +529,11 @@ static inline void pip_handler(decoder_t* self, uint8_t** p){
 		}
 
 		/* debug */
+		#ifdef QEMU_DEBUG_FLOW
 		debug_flow("decoding start!");
-		
+		#endif
+
 		while (p < end) {		
-			/* debug */
-			/* debug_flow("p (%p): 0x%02x", p, p[0]); */
 
 			switch(p[0]){
 				case 0x00:
@@ -866,7 +866,9 @@ static inline void pip_handler(decoder_t* self, uint8_t** p){
 #endif
 
 	/* debug */
+	#ifdef QEMU_DEBUG_FLOW
 	debug_flow("decode_buffer returns!");
+	#endif
 
 	return true;
 }

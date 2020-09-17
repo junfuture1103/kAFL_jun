@@ -400,7 +400,9 @@ static cofi_list* analyse_assembly(disassembler_t* self, uint64_t base_address, 
 	//bool abort_disassembly = false;
 
 	/* debug */
+	#ifdef QEMU_DEBUG_FLOW
 	debug_flow("analyze_assembly() called.");
+	#endif
 				
 	if (cs_open(CS_ARCH_X86, get_capstone_mode(self->word_width), &handle) != CS_ERR_OK)
 		return NULL;
@@ -469,9 +471,16 @@ static cofi_list* analyse_assembly(disassembler_t* self, uint64_t base_address, 
 			self->list_element->cofi.ins_size = insn->size;
 			if (type == COFI_TYPE_CONDITIONAL_BRANCH || type == COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH){
 				/* debug */
+				#ifdef QEMU_DEBUG_FLOW
 				debug_flow("insn->op_str: %s", insn->op_str);
+				#endif
+
 				self->list_element->cofi.target_addr = hex_to_bin(insn->op_str);
+
+				/* debug */
+				#ifdef QEMU_DEBUG_FLOW
 				debug_flow("self->list_element->cofi.target_addr: 0x%lx", self->list_element->cofi.target_addr);	
+				#endif
 			} else {
 				self->list_element->cofi.target_addr = 0;
 			}
@@ -553,6 +562,10 @@ static inline cofi_list* get_obj(disassembler_t* self, uint64_t entry_point, tnt
 
 	if (out_of_bounds(self, entry_point)){
 		/* debug */
+		#ifdef QEMU_DEBUG_FLOW
+		debug_flow("OOB");
+		#endif
+
 		return NULL;
 	}
 
@@ -670,7 +683,9 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 #ifdef CONFIG_REDQUEEN
 						if(redqueen_tracing){
 							/* debug */
+							#ifdef QEMU_DEBUG_FLOW
 							debug_flow("redqueen_tracing");
+							#endif
 
 							WRITE_SAMPLE_DECODED_DETAILED("** %lx -rq-> %lx \n", obj->cofi.ins_addr, obj->cofi.target_addr);
 							redqueen_register_transition(self->redqueen_state, obj->cofi.ins_addr, obj->cofi.target_addr);
@@ -683,7 +698,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 						last_obj = obj;
 
 						/* debug */
-						debug_flow("obj->cofi.target_addr: %p", obj->cofi.target_addr);
+						/* debug_flow("obj->cofi.target_addr: %p", obj->cofi.target_addr); */
 
 						obj->cofi.target_addr |= 0xFFFFFFFF00000000;
 						self->handler(obj->cofi.target_addr);
@@ -701,7 +716,11 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 							obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
 						}
+						/* debug */
+						#ifdef QEMU_DEBUG_FLOW
 						debug_flow("obj->cofi_target_ptr: %p", obj->cofi_target_ptr);
+						#endif
+
 						obj = obj->cofi_target_ptr;
 
 						//if(!limit_check(last_obj->cofi.target_addr, obj->cofi.ins_addr, limit)){
@@ -774,17 +793,28 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 				WRITE_SAMPLE_DECODED_DETAILED("(%d)\t%lx\n", COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH ,obj->cofi.ins_addr);
 				last_obj = obj;
 				if(!obj->cofi_target_ptr){
+					/* debug */
+					#ifdef QEMU_DEBUG_FLOW
+					debug_flow("obj->cofi.target_addr: 0x%lx", obj->cofi.target_addr);
+					#endif
+
+					/* temporal workaround */
+					obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+
 					obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
 				}
 				obj = obj->cofi_target_ptr;
 
 				//if(!limit_check(last_obj->cofi.target_addr, obj->cofi.ins_addr, limit)){
 				if (!obj || out_of_bounds(self, obj->cofi.ins_addr)) {
-					WRITE_SAMPLE_DECODED_DETAILED("4\n");
-					if (count_tnt(tnt_cache_state))
+					/* WRITE_SAMPLE_DECODED_DETAILED("4\n"); */
+					if (count_tnt(tnt_cache_state)) {
+						/* debug */
 						debug_false()
-					else
+					} else {
+						/* debug */						
 						return true;
+					}
 				}
 				break;
 

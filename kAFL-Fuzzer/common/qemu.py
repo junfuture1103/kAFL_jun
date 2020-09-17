@@ -28,6 +28,9 @@ from common.execution_result import ExecutionResult
 from fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from common.util import read_binary_file, atomic_write, print_fail, strdump
 
+# debug
+from playsound import playsound
+
 def get_valid_tap(tbase, nbase=0):
     cmd = """
     for((i=2;i<50;i++))
@@ -353,6 +356,7 @@ class qemu:
                     if sig == 0: # regular shutdown? still report as KASAN
                         return qemu_protocol.KASAN
                     else:
+                        playsound('/home/user/Music/life_theater.mp3')
                         raise EOFError("Qemu exited with signal: %s" % str(sig))
 
             if res == qemu_protocol.PRINTF:

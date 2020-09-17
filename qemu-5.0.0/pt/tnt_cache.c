@@ -29,11 +29,13 @@ uint8_t process_tnt_cache(tnt_cache_t* self){
 		self->pos = (self->pos + 1) % BUF_SIZE;
 
 		/* debug */
+		#ifdef QEMU_DEBUG_FLOW
 		if (result == TAKEN) {
 			debug_flow("result: TAKEN, self->tnt: %d", self->tnt);
 		} else if (result == NOT_TAKEN) {
 			debug_flow("result: NOT_TAKEN, self->tnt: %d", self->tnt);
 		}
+		#endif
 
 		return result;	// TAKEN or NOT_TAKEN
 	}
@@ -44,9 +46,10 @@ void append_tnt_cache(tnt_cache_t* self, uint8_t data){
 	uint8_t bsr_ret;
 
 	/* debug */
+	#ifdef QEMU_DEBUG_FLOW
 	debug_flow("append_tnt_cache(data=0x%02x) called.", data);
+	#endif
 	bsr_ret = asm_bsr(data);
-	debug_flow("bsf_ret: 0x%02x", bsr_ret);
 
 	uint8_t bits = bsr_ret - SHORT_TNT_OFFSET;
 	for(uint8_t i = SHORT_TNT_OFFSET; i < bits+SHORT_TNT_OFFSET; i++){
