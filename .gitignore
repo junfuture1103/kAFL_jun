@@ -38,5 +38,7 @@ TAGS
 .gdb_history
 *plog.pb-c.c
 *plog.pb-c.h
-linux.qcow2
+*.qcow2
 snapshot/*
+in/*
+out/*

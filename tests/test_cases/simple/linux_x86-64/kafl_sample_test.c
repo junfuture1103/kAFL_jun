@@ -58,11 +58,16 @@ ssize_t write_info(struct file *filp, const char __user *buff, size_t len, loff_
 		return -EFAULT;
 	}
 
-	if(input[0] == 'B')
-		if(input[1] == 'O')
-			if(input[2] == 'B')
-				if(input[3] == '9')
-					panic(KERN_INFO "EXPLODE!\n");
+	if (input[0] == 'K')
+		if (input[1] == 'E')
+			if (input[2] == 'R')
+				if(input[3] == 'N')
+					if (input[4] == 'E')
+						if (input[5] == 'L')
+							if (input[6] == 'A')
+								if (input[7] == 'F')
+									if (input[8] == 'L')
+										panic(KERN_INFO "EXPLODE!\n");
 
 	kfree(array);
 	return len;

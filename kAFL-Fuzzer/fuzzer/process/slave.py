@@ -28,7 +28,7 @@ from fuzzer.statistics import SlaveStatistics
 from fuzzer.technique.helper import rand
 
 # debug
-from debug.log import debug
+from debug.log import *
 
 def slave_loader(slave_id):
 
@@ -92,6 +92,7 @@ class SlaveProcess:
             while (time.time() - start_time) < busy_timeout:
                 meta_data = {"state": {"name": "import"}, "id": 0}
                 payload = rand.bytes(rand.int(32))
+
                 self.logic.process_node(payload, meta_data)
         else:
             log_slave("No ready work items, waiting...", self.slave_id)
@@ -232,6 +233,19 @@ class SlaveProcess:
 
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash = self.execution_exited_abnormally()
+
+        # debug
+        if SHOW_PAYLOAD:
+            pay = data.decode('iso-8859-9').encode('utf-8').decode('utf-8')
+            show = ''
+
+            for i in range(len(pay)):
+                if 0x20 > ord(pay[i]) or ord(pay[i]) >= 0x80:
+                    show += '.'
+                else:
+                    show += pay[i]
+
+            debug_log("Current payload: {}".format(show))
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic
