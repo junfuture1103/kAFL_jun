@@ -58,6 +58,11 @@ ssize_t write_info(struct file *filp, const char __user *buff, size_t len, loff_
 		return -EFAULT;
 	}
 
+	/* Length wall seems to exist
+	 *
+	 * BOB9 (4 bytes) -> succeed
+	 * KERNELAFL (9 bytes) -> failed
+	 */
 	if (input[0] == 'K')
 		if (input[1] == 'E')
 			if (input[2] == 'R')
