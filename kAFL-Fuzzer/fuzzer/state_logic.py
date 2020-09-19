@@ -26,6 +26,8 @@ from fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from fuzzer.technique.trim import perform_trim, perform_center_trim
 from fuzzer.technique.helper import rand
 
+# debug
+from debug.log import *
 
 class FuzzingStateLogic:
     HAVOC_MULTIPLIER = 2
@@ -84,6 +86,12 @@ class FuzzingStateLogic:
 
     def process_node(self, payload, metadata):
         self.init_stage_info(metadata)
+
+        # debug
+        nid = metadata['id']
+        if DEBUG_STATE:
+            debug("\033[1;36mNode " + str(nid) + "\033[0m entered \033[1;34m" + metadata["state"]["name"] + " \033[0mstage!", newline=True)
+            time.sleep(1)
 
         if metadata["state"]["name"] == "import":
             self.handle_import(payload, metadata)
@@ -157,7 +165,10 @@ class FuzzingStateLogic:
         return info
 
     def handle_import(self, payload, metadata, retry=0):
-        _, is_new = self.execute(payload, label="import")
+        # debug
+        state = metadata['state']['name']
+
+        _, is_new = self.execute(payload, label="import", state=state)
 
         # Inform user if seed yields no new coverage. This may happen if -ip0 is
         # wrong or the harness is buggy.
@@ -177,8 +188,14 @@ class FuzzingStateLogic:
         # Update input performance using multiple randomized executions
         # Scheduler will de-prioritize execution of very slow nodes..
         num_execs = 10
+        
+        # Execute test logic for num_execs times
         timer_start = time.time()
-        havoc.mutate_seq_havoc_array(payload, self.execute, num_execs)
+
+        # debug
+        state = metadata['state']['name']
+
+        havoc.mutate_seq_havoc_array(payload, self.execute, num_execs, state=state)
         timer_end = time.time()
         self.performance = (timer_end-timer_start) / num_execs
 
@@ -263,6 +280,9 @@ class FuzzingStateLogic:
         havoc_grimoire = self.config.argument_values["grimoire"]
         havoc_redqueen = self.config.argument_values['redqueen']
 
+        # debug
+        state = metadata['state']['name']
+
         for i in range(1):
             initial_findings = self.stage_info_findings
 
@@ -312,14 +332,14 @@ class FuzzingStateLogic:
         return self.slave.validate_bytes(payload, metadata, parent_info)
 
 
-    def execute(self, payload, label=None, extra_info=None):
+    def execute(self, payload, label=None, extra_info=None, state=None):
 
         self.stage_info_execs += 1
         if label and label != self.stage_info["method"]:
             self.stage_update_label(label)
 
         parent_info = self.get_parent_info(extra_info)
-        bitmap, is_new = self.slave.execute(payload, parent_info)
+        bitmap, is_new = self.slave.execute(payload, parent_info, state=state)  # debug
         if is_new:
             self.stage_info_findings += 1
         return bitmap, is_new
@@ -402,6 +422,9 @@ class FuzzingStateLogic:
         if not self.config.argument_values['D']:
             return False, {}
 
+        # debug
+        state = metadata['state']['name']
+
         skip_zero = self.config.argument_values['s']
         arith_max = self.config.config_values["ARITHMETIC_MAX"]
         use_effector_map = self.config.argument_values['d'] and len(payload) > 128
@@ -416,9 +439,9 @@ class FuzzingStateLogic:
 
         # Walking bitflips
         if det_info["stage"] == "flip_1":
-            bitflip.mutate_seq_walking_bits(payload_array,      self.execute, skip_null=skip_zero, effector_map=limiter_map)
-            bitflip.mutate_seq_two_walking_bits(payload_array,  self.execute, skip_null=skip_zero, effector_map=limiter_map)
-            bitflip.mutate_seq_four_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map)
+            bitflip.mutate_seq_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
+            bitflip.mutate_seq_two_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
+            bitflip.mutate_seq_four_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
 
             det_info["stage"] = "flip_8"
             if self.stage_timeout_reached():
@@ -431,15 +454,15 @@ class FuzzingStateLogic:
                 log_slave("Preparing effector map..", self.slave.slave_id)
                 effector_map = bytearray(limiter_map)
 
-            bitflip.mutate_seq_walking_byte(payload_array, self.execute, skip_null=skip_zero, limiter_map=limiter_map, effector_map=effector_map)
+            bitflip.mutate_seq_walking_byte(payload_array, self.execute, skip_null=skip_zero, limiter_map=limiter_map, effector_map=effector_map, state=state)
 
             if use_effector_map:
                 self.dilate_effector_map(effector_map, limiter_map)
             else:
                 effector_map = limiter_map
 
-            bitflip.mutate_seq_two_walking_bytes(payload_array,  self.execute, effector_map=effector_map)
-            bitflip.mutate_seq_four_walking_bytes(payload_array, self.execute, effector_map=effector_map)
+            bitflip.mutate_seq_two_walking_bytes(payload_array,  self.execute, effector_map=effector_map, state=state)
+            bitflip.mutate_seq_four_walking_bytes(payload_array, self.execute, effector_map=effector_map, state=state)
 
             det_info["stage"] = "arith"
             if effector_map:
@@ -450,9 +473,9 @@ class FuzzingStateLogic:
         # Arithmetic mutations..
         if det_info["stage"] == "arith":
             effector_map = det_info.get("eff_map", None)
-            arithmetic.mutate_seq_8_bit_arithmetic(payload_array,  self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max)
-            arithmetic.mutate_seq_16_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max)
-            arithmetic.mutate_seq_32_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max)
+            arithmetic.mutate_seq_8_bit_arithmetic(payload_array,  self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            arithmetic.mutate_seq_16_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            arithmetic.mutate_seq_32_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
 
             det_info["stage"] = "intr"
             if self.stage_timeout_reached():
@@ -461,9 +484,9 @@ class FuzzingStateLogic:
         # Interesting value mutations..
         if det_info["stage"] == "intr":
             effector_map = det_info.get("eff_map", None)
-            interesting_values.mutate_seq_8_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map)
-            interesting_values.mutate_seq_16_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max)
-            interesting_values.mutate_seq_32_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max)
+            interesting_values.mutate_seq_8_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, state=state)
+            interesting_values.mutate_seq_16_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            interesting_values.mutate_seq_32_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
 
             det_info["stage"] = "done"
 
@@ -489,7 +512,7 @@ class FuzzingStateLogic:
                             counter += 1
                             mutated = apply_dict(payload_array, repl, i)
                             # log_redq("dict_bf %d %s %s"%(i,repr(repl),repr(mutated)))
-                            self.execute(mutated, label="rq_dict")
+                            self.execute(mutated, label="rq_dict", state=metadata['state']['name'])
         log_redq("RQ-Dict: Have performed %d iters" % counter)
 
 
@@ -498,7 +521,7 @@ class FuzzingStateLogic:
         radamsa_amount = havoc.havoc_range(self.HAVOC_MULTIPLIER/perf) // self.RADAMSA_DIV
 
         self.stage_update_label("radamsa")
-        radamsa.mutate_seq_radamsa_array(payload_array, self.execute, radamsa_amount)
+        radamsa.mutate_seq_radamsa_array(payload_array, self.execute, radamsa_amount, state=metadata['state']['name'])
 
     def __perform_havoc(self, payload_array, metadata, use_splicing):
         perf = metadata["performance"]
@@ -506,10 +529,10 @@ class FuzzingStateLogic:
 
         if use_splicing:
             self.stage_update_label("afl_splice")
-            havoc.mutate_seq_splice_array(payload_array, self.execute, havoc_amount)
+            havoc.mutate_seq_splice_array(payload_array, self.execute, havoc_amount, state=metadata['state']['name'])
         else:
             self.stage_update_label("afl_havoc")
-            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount)
+            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount, state=metadata['state']['name'])
 
 
     def __check_colorization(self, orig_hash, payload_array, min, max):

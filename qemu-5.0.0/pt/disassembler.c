@@ -557,13 +557,20 @@ void destroy_disassembler(disassembler_t* self){
 
 static inline cofi_list* get_obj(disassembler_t* self, uint64_t entry_point, tnt_cache_t* tnt_cache_state){
 	cofi_list *tmp_obj;
+	uint64_t tmp_entry_point;
+
+	/* test */
+	tmp_entry_point = (entry_point < 0x100000000) ?
+						entry_point | 0xFFFFFFFF00000000 :
+						entry_point;
+
 	//if (!count_tnt(tnt_cache_state))
 	//	return NULL;
 
-	if (out_of_bounds(self, entry_point)){
+	if (out_of_bounds(self, tmp_entry_point)){
 		/* debug */
 		#ifdef QEMU_DEBUG_FLOW
-		debug_flow("OOB");
+		debug_flow("OOB (entry_point: 0x%lx)", entry_point);
 		#endif
 
 		return NULL;
@@ -700,7 +707,12 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 						/* debug */
 						/* debug_flow("obj->cofi.target_addr: %p", obj->cofi.target_addr); */
 
-						obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+						/* test */
+						if (obj->cofi.target_addr < 0x100000000) {
+							obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+						}
+
+						/* call pt_bitmap */
 						self->handler(obj->cofi.target_addr);
 						
 						if(!obj->cofi_target_ptr){
@@ -798,8 +810,10 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 					debug_flow("obj->cofi.target_addr: 0x%lx", obj->cofi.target_addr);
 					#endif
 
-					/* temporal workaround */
-					obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+					/* test */
+					if (obj->cofi.target_addr < 0x100000000) {
+						obj->cofi.target_addr |= 0xFFFFFFFF00000000;
+					}
 
 					obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
 				}

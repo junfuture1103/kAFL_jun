@@ -47,7 +47,7 @@ class ServerConnection:
                     # TODO: try to restart or exit when all slaves dead
                     sock_ready.close()
                     self.clients.remove(sock_ready)
-                    print_fail("Slave has died - check logs!")
+                    debug_error("Slave has died - check logs!")
                     #raise
         return results
 

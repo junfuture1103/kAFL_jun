@@ -34,6 +34,8 @@ from common.qemu import qemu
 import json
 import csv
 
+# debug
+from debug.log import *
 
 class TraceParser:
     def __init__(self):
@@ -158,6 +160,10 @@ def get_inputs_by_time(data_dir):
         sys.exit()
 
     input_data.sort(key=itemgetter(2))
+
+    # debug
+    debug(input_data)
+
     return input_data
 
 

@@ -499,7 +499,7 @@ static inline void pip_handler(decoder_t* self, uint8_t** p){
 	debug("decode_buffer(map=%p, len=%u) called!", map, len);
 #endif
 
-#ifdef QEMU_DEBUG
+#ifdef QEMU_DEBUG_DUMP
 	/* Dump raw packet data */
 	fprintf(stderr, "offsets           00 01 02 03 04 05 06 07   08 09 0a 0b 0c 0d 0e 0f\n");
 	fprintf(stderr, "───────────────────────────────────────────────────────────────────\n");

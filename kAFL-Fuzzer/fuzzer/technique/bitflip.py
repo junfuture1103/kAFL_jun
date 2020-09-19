@@ -21,7 +21,7 @@ def walking_bits_execs(data, skip_null=False, effector_map=None):
     return execs
 
 
-def mutate_seq_walking_bits(data, func, skip_null=False, effector_map=None):
+def mutate_seq_walking_bits(data, func, skip_null=False, effector_map=None, state=None):
     for i in range(len(data) * 8):
         if effector_map:
             if not effector_map[i // 8]:
@@ -29,11 +29,11 @@ def mutate_seq_walking_bits(data, func, skip_null=False, effector_map=None):
         if data[i // 8] == 0x00 and skip_null:
             continue
         data[i // 8] ^= (0x80 >> (i % 8))
-        func(data, label="afl_flip_1/1")
+        func(data, label="afl_flip_1/1", state=state)
         data[i // 8] ^= (0x80 >> (i % 8))
 
 
-def mutate_seq_two_walking_bits(data, func, skip_null=False, effector_map=None):
+def mutate_seq_two_walking_bits(data, func, skip_null=False, effector_map=None, state=None):
     for i in range((len(data) * 8) - 1):
         if effector_map:
             if not (effector_map[i // 8] or effector_map[(i + 1) // 8]):
@@ -42,12 +42,12 @@ def mutate_seq_two_walking_bits(data, func, skip_null=False, effector_map=None):
             continue
         data[i // 8] ^= (0x80 >> (i % 8))
         data[(i + 1) // 8] ^= (0x80 >> ((i + 1) % 8))
-        func(data, label="afl_flip_2/1")
+        func(data, label="afl_flip_2/1", state=state)
         data[i // 8] ^= (0x80 >> (i % 8))
         data[(i + 1) // 8] ^= (0x80 >> ((i + 1) % 8))
 
 
-def mutate_seq_four_walking_bits(data, func, skip_null=False, effector_map=None):
+def mutate_seq_four_walking_bits(data, func, skip_null=False, effector_map=None, state=None):
     for i in range((len(data) * 8 - 3)):
         if effector_map:
             if not (effector_map[i // 8] or effector_map[(i + 3) // 8]):
@@ -59,14 +59,14 @@ def mutate_seq_four_walking_bits(data, func, skip_null=False, effector_map=None)
         data[(i + 1) // 8] ^= (0x80 >> ((i + 1) % 8))
         data[(i + 2) // 8] ^= (0x80 >> ((i + 2) % 8))
         data[(i + 3) // 8] ^= (0x80 >> ((i + 3) % 8))
-        func(data, label="afl_flip_4/1")
+        func(data, label="afl_flip_4/1", state=state)
         data[i // 8] ^= (0x80 >> (i % 8))
         data[(i + 1) // 8] ^= (0x80 >> ((i + 1) % 8))
         data[(i + 2) // 8] ^= (0x80 >> ((i + 2) % 8))
         data[(i + 3) // 8] ^= (0x80 >> ((i + 3) % 8))
 
 
-def mutate_seq_walking_byte(data, func, effector_map=None, limiter_map=None, skip_null=False):
+def mutate_seq_walking_byte(data, func, effector_map=None, limiter_map=None, skip_null=False, state=None):
 
     if effector_map:
         orig_bitmap, _ = func(data)
@@ -80,13 +80,13 @@ def mutate_seq_walking_byte(data, func, effector_map=None, limiter_map=None, ski
             continue
 
         data[i] ^= 0xFF
-        bitmap, _ = func(data, label="afl_flip_8/1")
+        bitmap, _ = func(data, label="afl_flip_8/1", state=state)
         if effector_map and orig_bitmap == bitmap:
             effector_map[i] = 0
         data[i] ^= 0xFF
 
 
-def mutate_seq_two_walking_bytes(data, func, effector_map=None, skip_null=False):
+def mutate_seq_two_walking_bytes(data, func, effector_map=None, skip_null=False, state=None):
     if len(data) <= 1:
         return
 
@@ -100,12 +100,12 @@ def mutate_seq_two_walking_bytes(data, func, effector_map=None, skip_null=False)
 
         data[i+0] ^= 0xFF
         data[i+1] ^= 0xFF
-        func(data, label="afl_flip_8/2")
+        func(data, label="afl_flip_8/2", state=state)
         data[i+0] ^= 0xFF
         data[i+1] ^= 0xFF
 
 
-def mutate_seq_four_walking_bytes(data, func, effector_map=None, skip_null=False):
+def mutate_seq_four_walking_bytes(data, func, effector_map=None, skip_null=False, state=None):
     if len(data) <= 3:
         return
 
@@ -122,7 +122,7 @@ def mutate_seq_four_walking_bytes(data, func, effector_map=None, skip_null=False
         data[i+1] ^= 0xFF
         data[i+2] ^= 0xFF
         data[i+3] ^= 0xFF
-        func(data, label="afl_flip_8/4")
+        func(data, label="afl_flip_8/4", state=state)
         data[i+0] ^= 0xFF
         data[i+1] ^= 0xFF
         data[i+2] ^= 0xFF

@@ -42,7 +42,7 @@ def init_radamsa(config, slave_id):
             "-n", "inf"]
     location_corpus = config.argument_values['work_dir'] + "/corpus/"
 
-def mutate_seq_radamsa_array(data, func, max_iterations):
+def mutate_seq_radamsa_array(data, func, max_iterations, state=None):
     global location_corpus
     global radamsa_cmd
     global radamsa_port
@@ -83,9 +83,9 @@ def mutate_seq_radamsa_array(data, func, max_iterations):
                 if size > (64 << 10):
                     payload = payload[:(2 << 10)]
                 if size == 0:
-                    func(data)
+                    func(data, state=state)
                 else:
-                    func(payload)
+                    func(payload, state=state)
             except Exception as e:
                 log_radamsa("Exception: " + str(e))
                 time.sleep(0.1)

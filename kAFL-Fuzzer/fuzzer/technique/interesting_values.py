@@ -11,7 +11,7 @@ from fuzzer.technique.helper import *
 from binascii import hexlify
 
 
-def mutate_seq_8_bit_interesting(data, func, skip_null=False, effector_map=None, verbose=False):
+def mutate_seq_8_bit_interesting(data, func, skip_null=False, effector_map=None, verbose=False, state=None):
 
     label="afl_int_1"
     for i in range(0, len(data)):
@@ -29,12 +29,12 @@ def mutate_seq_8_bit_interesting(data, func, skip_null=False, effector_map=None,
             if (is_not_bitflip(orig ^ value) and
                 is_not_arithmetic(orig, value, 1)):
                     data[i] = value
-                    func(data, label=label)
+                    func(data, label=label, state=state)
 
         data[i] = orig
 
 
-def mutate_seq_16_bit_interesting(data, func, skip_null=False, effector_map=None, arith_max=AFL_ARITH_MAX, verbose=False):
+def mutate_seq_16_bit_interesting(data, func, skip_null=False, effector_map=None, arith_max=AFL_ARITH_MAX, verbose=False, state=None):
 
     label="afl_int_2"
     for i in range(len(data) - 1):
@@ -56,19 +56,19 @@ def mutate_seq_16_bit_interesting(data, func, skip_null=False, effector_map=None
                 is_not_arithmetic(oval, num1, 2, arith_max=arith_max) and
                 is_not_interesting(oval, num1, 2, 0)):
                     data[i:i+2] = struct.pack("<H", num1)
-                    func(data, label=label)
+                    func(data, label=label, state=state)
 
             if (num1 != num2 and \
                 is_not_bitflip(oval ^ num2) and \
                 is_not_arithmetic(oval, num2, 2, arith_max=arith_max) and \
                 is_not_interesting(oval, num2, 2, 1)):
                     data[i:i+2] = struct.pack(">H", num1)
-                    func(data, label=label)
+                    func(data, label=label, state=state)
 
         data[i:i+2] = orig
 
 
-def mutate_seq_32_bit_interesting(data, func, skip_null=False, effector_map=None, arith_max=AFL_ARITH_MAX, verbose=False):
+def mutate_seq_32_bit_interesting(data, func, skip_null=False, effector_map=None, arith_max=AFL_ARITH_MAX, verbose=False, state=None):
 
     label="afl_int_4"
     for i in range(len(data) - 3):
@@ -91,12 +91,12 @@ def mutate_seq_32_bit_interesting(data, func, skip_null=False, effector_map=None
                 is_not_arithmetic(oval, num1, 4, arith_max=arith_max) and \
                 is_not_interesting(oval, num1, 4, 0)):
                     data[i:i+4] = struct.pack("<I", num1)
-                    func(data, label=label)
+                    func(data, label=label, state=state)
 
             if (num1 != num2 and is_not_bitflip(oval ^ num2) and
                 is_not_arithmetic(oval, num2, 4, arith_max=arith_max) and
                 is_not_interesting(oval, num2, 4, 1)):
                     data[i:i+4] = struct.pack("<I", num2)
-                    func(data, label=label)
+                    func(data, label=label, state=state)
 
         data[i:i+4] = orig

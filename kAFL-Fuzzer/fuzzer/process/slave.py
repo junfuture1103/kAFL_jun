@@ -103,17 +103,30 @@ class SlaveProcess:
         meta_data = QueueNode.get_metadata(msg["task"]["nid"])
         payload = QueueNode.get_payload(meta_data["info"]["exit_reason"], meta_data["id"])
 
+        # debug
+        """ if DEBUG_STATE:
+            debug('handle_node() called. nid: {}'.format(meta_data['id'])) """
+
         results, new_payload = self.logic.process_node(payload, meta_data)
+
         if new_payload:
             default_info = {"method": "validate_bits", "parent": meta_data["id"]}
             if self.validate_bits(new_payload, meta_data, default_info):
-                log_slave("Stage %s found alternative payload for node %d"
+                """ log_slave("Stage %s found alternative payload for node %d"
                           % (meta_data["state"]["name"], meta_data["id"]),
-                          self.slave_id)
+                          self.slave_id) """
+                debug("Stage %s found alternative payload for node %d" 
+                         % (meta_data["state"]["name"], meta_data["id"]))
+                time.sleep(5)
+
             else:
-                log_slave("Provided alternative payload found invalid - bug in stage %s?"
+                """ log_slave("Provided alternative payload found invalid - bug in stage %s?"
                           % meta_data["state"]["name"],
-                          self.slave_id)
+                          self.slave_id) """
+                debug("Provided alternative payload found invalid - bug in stage %s?"
+                        % meta_data["state"]["name"])
+                time.sleep(5)
+
         self.conn.send_node_done(meta_data["id"], results, new_payload)
 
     def loop(self):
@@ -142,13 +155,13 @@ class SlaveProcess:
         self.statistics.event_exec()
         new_bitmap = self.q.send_payload().apply_lut()
         new_array = new_bitmap.copy_to_array()
-        #debugging_code, every payload is valid
+        # debugging_code, every payload is valid
         return True, new_bitmap
-        if new_array == old_array:
-            return True, new_bitmap
+        """ if new_array == old_array:
+            return True, new_bitmap """
 
         log_slave("Validation failed, ignoring this input", self.slave_id)
-        #debugging_code
+        # debugging_code
         #if False: # activate detailed logging of funky bitmaps
         if True:
             for i in range(new_bitmap.bitmap_size):
@@ -226,7 +239,8 @@ class SlaveProcess:
             atomic_write(trace_folder + "/trace_b", trace2)
         return exec_res
 
-    def execute(self, data, info):
+    # For debug purpose, receive state info
+    def execute(self, data, info, state=None):
         self.statistics.event_exec()
 
         exec_res = self.__execute(data)     # returns ExecutionResult
@@ -234,8 +248,8 @@ class SlaveProcess:
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash = self.execution_exited_abnormally()
 
-        # debug
-        if SHOW_PAYLOAD:
+        # show mutated payloads
+        if DEBUG_SHOW_PAYLOAD:
             pay = data.decode('iso-8859-9').encode('utf-8').decode('utf-8')
             show = ''
 
@@ -244,8 +258,11 @@ class SlaveProcess:
                     show += '.'
                 else:
                     show += pay[i]
-
-            debug_log("Current payload: {}".format(show))
+            
+            if state:
+                debug("\033[1;34m[{}]\033[0m payload: {}".format(state, show))
+            else:
+                debug("payload: {}".format(show))
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic

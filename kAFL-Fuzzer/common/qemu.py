@@ -525,7 +525,7 @@ class qemu:
             self.set_init_state()
         except:
             if not self.exiting:
-                print_fail("Failed to launch Qemu, please see logs.")
+                debug_error("Failed to launch Qemu, please see logs.")
                 log_qemu("Fatal error: Failed to launch Qemu.", self.qemu_id)
                 self.shutdown()
             return False

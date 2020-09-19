@@ -47,7 +47,8 @@ def havoc_range(perf_score):
     return max_iterations
 
 
-def mutate_seq_havoc_array(data, func, max_iterations, resize=False):
+# For debug purpose, add state information
+def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None):
     if resize:
         data = data + data
     else:
@@ -61,10 +62,12 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False):
             data = handler(data)
             if len(data) >= KAFL_MAX_FILE:
                 data = data[:KAFL_MAX_FILE]
-        func(data)
+        
+        # Execute test logic for max_iterations times
+        func(data, state=state)
 
 
-def mutate_seq_splice_array(data, func, max_iterations, resize=False):
+def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None):
     global location_corpus
     splice_rounds = 16
     files = glob.glob(location_corpus + "/*/payload_*")
@@ -75,4 +78,5 @@ def mutate_seq_splice_array(data, func, max_iterations, resize=False):
         mutate_seq_havoc_array(spliced_data,
                                func,
                                int(2*max_iterations/splice_rounds),
-                               resize=resize)
+                               resize=resize,
+                               state=state)

@@ -21,7 +21,7 @@ from common.self_check import self_check
 from common.config import InfoConfiguration
 
 # debug
-from debug.log import debug_kafl
+from debug.log import debug_info
 
 KAFL_ROOT = os.path.dirname(os.path.realpath(__file__)) + "/"
 KAFL_BANNER = KAFL_ROOT + "banner.txt"
@@ -33,7 +33,7 @@ def main():
         for line in f:
             print(line.replace("\n", ""))
 
-        debug_kafl("Guest address information - apply one to test!\n")
+        debug_info("Guest address information - apply one to test!\n")
 
     if not self_check(KAFL_ROOT):
         return 1
