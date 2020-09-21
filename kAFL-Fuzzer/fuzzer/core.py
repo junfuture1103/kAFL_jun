@@ -85,7 +85,7 @@ def start(config):
     try:
         master.loop()
     except KeyboardInterrupt:
-        debug_kafl("Received Ctrl-C, killing slaves...")
+        debug_kafl("Received Ctrl-C, killing slaves...", newline=True)
     except:
         debug_except("Exception in Master. Exiting..")
         print(traceback.format_exc())

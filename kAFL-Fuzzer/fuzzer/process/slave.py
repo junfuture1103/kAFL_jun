@@ -275,7 +275,7 @@ class SlaveProcess:
                     self.statistics.event_funky()
                     log_slave("Input validation failed, throttling N/A", self.slave_id)
 
-                    # TODO: the funky event is already over at this point and the error may indeed not be deterministic
+                    # TODO: the funky event is already over aft this point and the error may indeed not be deterministic
                     # how about we store some $num funky payloads for more focused exploration rather than discarding them?
                     #exec_res.exit_reason = 'funky'
                     #self.__send_to_master(data, exec_res, info)

@@ -18,8 +18,11 @@ YELLOW_PREFIX = '\033[1;33m[DEBUG]\033[0m '
 def debug_info(msg):
     print(INFO_PREFIX + msg)
 
-def debug_kafl(msg):
-    print(KAFL_PREFIX + msg)
+def debug_kafl(msg, newline=False):
+    if newline:
+        print('\n' + KAFL_PREFIX + msg)
+    else:
+        print(KAFL_PREFIX + msg)
 
 def debug_warn(msg):
     print(WARN_PREFIX + msg)

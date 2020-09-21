@@ -58,21 +58,28 @@ ssize_t write_info(struct file *filp, const char __user *buff, size_t len, loff_
 		return -EFAULT;
 	}
 
-	/* Length wall seems to exist
-	 *
-	 * BOB9 (4 bytes) -> succeed
-	 * KERNELAFL (9 bytes) -> failed
-	 */
+	if (input[0] == 'H')
+		if (input[1] == 'E')
+			if (input[2] == 'X')
+				panic(KERN_INFO "HEX!\n");
+
+	if (input[0] == 'S')
+		if (input[1] == 'H')
+			if (input[2] == 'O')
+				if (input[3] == 'R')
+					if (input[4] == 'T')
+						panic(KERN_INFO "SHORT!\n");
+
 	if (input[0] == 'K')
 		if (input[1] == 'E')
 			if (input[2] == 'R')
-				if(input[3] == 'N')
+				if (input[3] == 'N')
 					if (input[4] == 'E')
 						if (input[5] == 'L')
 							if (input[6] == 'A')
 								if (input[7] == 'F')
 									if (input[8] == 'L')
-										panic(KERN_INFO "EXPLODE!\n");
+										panic(KERN_INFO "KERNELAFL!\n");
 
 	kfree(array);
 	return len;
