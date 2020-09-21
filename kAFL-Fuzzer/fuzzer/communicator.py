@@ -19,6 +19,8 @@ MSG_NODE_DONE = 3
 MSG_NEW_INPUT = 4
 MSG_BUSY = 5
 
+# debug
+from debug.log import *
 
 class ServerConnection:
 
