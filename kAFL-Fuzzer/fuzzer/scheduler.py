@@ -79,7 +79,7 @@ class Scheduler:
         if node.get_level() > 0:
             """ score += node.get_level()//5 """
             # boost more for deeper nodes
-            score += node.get_level() * 2
+            score += node.get_level() // 3
 
         # boost nodes with many fav bits
         if len(node.get_fav_bits()) > 0:

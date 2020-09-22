@@ -292,7 +292,8 @@ class SlaveProcess:
             if crash or valid:
                 # debug
                 if crash:
-                    debug("Crash detected!")
+                    debug("\033[1;31m[crash]\033[0m Crash detected!")
+                    time.sleep(1.5)
 
                 # debug
                 # debug("Before call to __send_to_master()!")
@@ -301,7 +302,9 @@ class SlaveProcess:
                 self.__send_to_master(data, exec_res, info)
         else:
             if crash:
-                log_slave("Crashing input found (%s), but not new (discarding)" % (exec_res.exit_reason), self.slave_id)
+                # Do not discard crashing inputs anymore!
+                # log_slave("Crashing input found (%s), but not new (discarding)" % (exec_res.exit_reason), self.slave_id)
+                self.__send_to_master(data, exec_res, info)
 
         # restart Qemu on crash
         if crash:
