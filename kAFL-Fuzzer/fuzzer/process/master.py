@@ -26,6 +26,7 @@ from fuzzer.node import QueueNode
 
 # debug
 from debug.log import *
+import time
 
 class MasterProcess:
 
@@ -59,7 +60,9 @@ class MasterProcess:
             os.remove(path)
             return self.comm.send_import(conn, {"type": "import", "payload": seed})
         # Process items from queue..
+
         node = self.queue.get_next()
+
         if node:
             return self.comm.send_node(conn, {"type": "node", "nid": node.get_id()})
 
@@ -85,6 +88,10 @@ class MasterProcess:
                     self.send_next_task(conn)
                 elif msg["type"] == MSG_NEW_INPUT:
                     # Slave reports new interesting input
+                    if DEBUG_FLOW:
+                        debug_flow('MSG_NEW_INPUT')
+                        debug_flow('interesting input: ' + str(msg['input']['payload']))
+
                     log_master("Received new input: {}".format(repr(msg["input"]["payload"])))
                     node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)

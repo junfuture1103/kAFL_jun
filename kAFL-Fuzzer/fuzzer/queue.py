@@ -9,6 +9,10 @@ Queue of fuzz inputs (nodes). Interface with scheduler to determine next input t
 
 from fuzzer.scheduler import Scheduler
 
+# debug
+import time
+from debug.log import *
+
 class InputQueue:
     def __init__(self, config, statistics):
         self.num_slaves = config.argument_values['p']
@@ -22,6 +26,28 @@ class InputQueue:
     def get_next(self, retry=False):
         if len(self.id_to_node) == 0:
             return None
+
+        # debug
+        if DEBUG_SHOW_QUEUE and len(self.current_cycle) != 0:
+            msg = 'self.current_cycle: [\n'
+            queue = self.current_cycle
+            for i in range(len(queue)):
+                qnode = queue[i]
+                info = '        '
+                if i == len(queue) - 1:
+                    info += '\033[1;36m'
+                info += '    ['
+                info += f"'id': {qnode.get_id()}, "
+                info += f"'state': '{qnode.get_state()}', "
+                info += f"'level': '{qnode.get_level()}', "
+                info += f"'payload': '{qnode.get_payload(qnode.get_exit_reason(), qnode.get_id())}'"
+                info += ']\n'
+                if i == len(queue) - 1:
+                    info += '\033[0m'
+                msg += info
+            msg += '        ]'
+            debug(msg)
+            time.sleep(1.5)
 
         while self.current_cycle:
             node = self.current_cycle.pop()

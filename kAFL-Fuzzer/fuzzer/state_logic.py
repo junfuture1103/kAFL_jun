@@ -31,7 +31,8 @@ from debug.log import *
 
 class FuzzingStateLogic:
     HAVOC_MULTIPLIER = 2
-    RADAMSA_DIV = 20
+    RADAMSA_DIV = 25
+    """ RADAMSA_DIV = 20 """
     COLORIZATION_COUNT = 1
     COLORIZATION_STEPS = 1500
     COLORIZATION_TIMEOUT = 5
@@ -107,7 +108,16 @@ class FuzzingStateLogic:
             resume, afl_det_info = self.handle_deterministic(payload, metadata)
             if resume:
                 return self.create_update({"name": "deterministic"}, {"afl_det_info": afl_det_info}), None
-            return self.create_update({"name": "havoc"}, {"afl_det_info": afl_det_info}), None
+            elif RAND_APPEND:
+                return self.create_update({"name": "affix"}, {"afl_det_info": afl_det_info}), None
+            else:
+                return self.create_update({"name": "havoc"}, {"afl_det_info": afl_det_info}), None
+        elif metadata["state"]["name"] == "affix":
+            resume, afl_det_info = self.handle_affix(payload, metadata)
+            if resume:
+                return self.create_update({"name": "affix"}, {"afl_det_info": afl_det_info}), None
+            else:
+                return self.create_update({"name": "havoc"}, {"afl_det_info": afl_det_info}), None
         elif metadata["state"]["name"] == "havoc":
             self.handle_havoc(payload, metadata)
             return self.create_update({"name": "final"}, None), None
@@ -217,6 +227,7 @@ class FuzzingStateLogic:
             return None
         #log_slave("before trim:\t\t{}".format(repr(payload)), self.slave.slave_id)
         #log_slave("after trim:\t\t{}".format(repr(new_payload)), self.slave.slave_id)
+        """ return new_payload """
         return new_payload
 
     def handle_grimoire_inference(self, payload, metadata):
@@ -339,7 +350,7 @@ class FuzzingStateLogic:
             self.stage_update_label(label)
 
         parent_info = self.get_parent_info(extra_info)
-        bitmap, is_new = self.slave.execute(payload, parent_info, state=state)  # debug
+        bitmap, is_new = self.slave.execute(payload, parent_info, state=state, label=label)  # debug
         if is_new:
             self.stage_info_findings += 1
         return bitmap, is_new
@@ -436,6 +447,94 @@ class FuzzingStateLogic:
 
         default_info = {"stage": "flip_1"}
         det_info = metadata.get("afl_det_info", default_info)
+
+        # Walking bitflips
+        if det_info["stage"] == "flip_1":
+            bitflip.mutate_seq_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
+            bitflip.mutate_seq_two_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
+            bitflip.mutate_seq_four_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
+
+            det_info["stage"] = "flip_8"
+            if self.stage_timeout_reached():
+                return True, det_info
+
+        # Walking byte sets..
+        if det_info["stage"] == "flip_8":
+            # Generate AFL-style effector map based on walking_bytes()
+            if use_effector_map:
+                log_slave("Preparing effector map..", self.slave.slave_id)
+                effector_map = bytearray(limiter_map)
+
+            bitflip.mutate_seq_walking_byte(payload_array, self.execute, skip_null=skip_zero, limiter_map=limiter_map, effector_map=effector_map, state=state)
+
+            if use_effector_map:
+                self.dilate_effector_map(effector_map, limiter_map)
+            else:
+                effector_map = limiter_map
+
+            bitflip.mutate_seq_two_walking_bytes(payload_array,  self.execute, effector_map=effector_map, state=state)
+            bitflip.mutate_seq_four_walking_bytes(payload_array, self.execute, effector_map=effector_map, state=state)
+
+            det_info["stage"] = "arith"
+            if effector_map:
+                det_info["eff_map"] = bytearray(effector_map)
+            if self.stage_timeout_reached():
+                return True, det_info
+
+        # Arithmetic mutations..
+        if det_info["stage"] == "arith":
+            effector_map = det_info.get("eff_map", None)
+            arithmetic.mutate_seq_8_bit_arithmetic(payload_array,  self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            arithmetic.mutate_seq_16_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            arithmetic.mutate_seq_32_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+
+            det_info["stage"] = "intr"
+            if self.stage_timeout_reached():
+                return True, det_info
+
+        # Interesting value mutations..
+        if det_info["stage"] == "intr":
+            effector_map = det_info.get("eff_map", None)
+            interesting_values.mutate_seq_8_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, state=state)
+            interesting_values.mutate_seq_16_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+            interesting_values.mutate_seq_32_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
+
+            det_info["stage"] = "done"
+
+        return False, det_info
+
+
+    # Experimental feature
+    # Add random few bytes and repeat deterministic phase
+    def handle_affix(self, payload, metadata):
+        # skip deterministic phase when argument '-D' exists
+        if not self.config.argument_values['D']:
+            return False, {}
+
+        # add random few bytes
+        rand.reseed()
+        payload += rand.bytes(APPEND_AMOUNT)
+        debug_flow(f'handle_affix() called.')
+        debug_flow(f'payload: {payload}')
+        # time.sleep(1.5)
+
+        # debug
+        state = metadata['state']['name']
+
+        skip_zero = self.config.argument_values['s']
+        arith_max = self.config.config_values["ARITHMETIC_MAX"]
+        use_effector_map = self.config.argument_values['d'] and len(payload) > 128
+        limiter_map = self.create_limiter_map(payload)
+        effector_map = None
+
+        # Mutable payload allows faster bitwise manipulations
+        payload_array = bytearray(payload)
+
+        default_info = {"stage": "flip_1"}
+        det_info = metadata.get("afl_det_info", default_info)
+        
+        # reset det_info
+        det_info['stage'] = 'flip_1'
 
         # Walking bitflips
         if det_info["stage"] == "flip_1":

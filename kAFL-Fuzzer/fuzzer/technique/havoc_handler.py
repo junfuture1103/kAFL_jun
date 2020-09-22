@@ -218,12 +218,15 @@ def havoc_perform_byte_seq_extra2(data):
 
 
 def havoc_splicing(data, files):
+    split_location = 0
+
     if len(data) < 2 or files is None:
-        return data
+        return data, split_location
 
     rand.shuffle(files)
     retry_limit = 64
 
+    # for file in reversed(files[:retry_limit]):
     for file in files[:retry_limit]:
         file_data = read_binary_file(file)
         if len(file_data) < 2:
@@ -234,10 +237,10 @@ def havoc_splicing(data, files):
             continue
 
         split_location = first_diff + rand.int(last_diff - first_diff)
-        return data[:split_location] + file_data[split_location:]
+        return data[:split_location] + file_data[split_location:], split_location
 
     # none of the files are suitable
-    return None
+    return None, split_location
 
 
 dict_set = set()

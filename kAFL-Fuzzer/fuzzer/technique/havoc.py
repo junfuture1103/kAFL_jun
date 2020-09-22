@@ -12,6 +12,9 @@ import glob
 from common.config import FuzzerConfiguration
 from fuzzer.technique.havoc_handler import *
 
+# debug
+from debug.log import *
+
 
 def load_dict(file_name):
     f = open(file_name)
@@ -48,7 +51,10 @@ def havoc_range(perf_score):
 
 
 # For debug purpose, add state information
-def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None):
+def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None, splice=None, split_location=None):
+    # original payload
+    payload = data
+    
     if resize:
         data = data + data
     else:
@@ -57,13 +63,29 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None)
     for i in range(max_iterations):
         stacking = rand.int(AFL_HAVOC_STACK_POW2)
 
-        for j in range(1 << (1 + stacking)):
-            handler = rand.select(havoc_handler)
-            data = handler(data)
-            if len(data) >= KAFL_MAX_FILE:
-                data = data[:KAFL_MAX_FILE]
+        if not splice:
+            for j in range(1 << (1 + stacking)):
+                handler = rand.select(havoc_handler)
+                data = handler(data)
+                if len(data) >= KAFL_MAX_FILE:
+                    data = data[:KAFL_MAX_FILE]
+        # Experimental
+        else:
+            state = 'splice'
+
+            for j in range(1 << (1 + stacking)):
+                handler = rand.select(havoc_handler)
+                newdata = handler(data)
+                data = data[:split_location] + newdata
+                if len(data) >= KAFL_MAX_FILE:
+                    data = data[:KAFL_MAX_FILE]
+
+        # test
+        if len(data) >= DEBUG_HAVOC_MAX:
+            data = data[:DEBUG_HAVOC_MAX]
         
         # Execute test logic for max_iterations times
+        """ func(data, state=state) """
         func(data, state=state)
 
 
@@ -72,11 +94,13 @@ def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None
     splice_rounds = 16
     files = glob.glob(location_corpus + "/*/payload_*")
     for _ in range(splice_rounds):
-        spliced_data = havoc_splicing(data, files)
+        spliced_data, split_location = havoc_splicing(data, files)
         if spliced_data is None:
             return # could not find any suitable splice pair for this file
         mutate_seq_havoc_array(spliced_data,
                                func,
                                int(2*max_iterations/splice_rounds),
                                resize=resize,
-                               state=state)
+                               state=state,
+                               splice=True,
+                               split_location=split_location)

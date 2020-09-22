@@ -240,10 +240,19 @@ class SlaveProcess:
         return exec_res
 
     # For debug purpose, receive state info
-    def execute(self, data, info, state=None):
+    def execute(self, data, info, state=None, label=None):
         self.statistics.event_exec()
 
         exec_res = self.__execute(data)     # returns ExecutionResult
+
+        # debug
+        """ msg = f'''exec_res = [
+            'bitmap_size': {exec_res.bitmap_size},
+            'exit_reason': {exec_res.exit_reason},
+            'performance': {exec_res.performance}
+        ]
+        '''
+        debug(msg) """
 
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash = self.execution_exited_abnormally()
@@ -252,17 +261,18 @@ class SlaveProcess:
         if DEBUG_SHOW_PAYLOAD:
             pay = data.decode('iso-8859-9').encode('utf-8').decode('utf-8')
             show = ''
-
             for i in range(len(pay)):
                 if 0x20 > ord(pay[i]) or ord(pay[i]) >= 0x80:
                     show += '.'
                 else:
                     show += pay[i]
-            
             if state:
-                debug("\033[1;34m[{}]\033[0m payload: {}".format(state, show))
+                if label:
+                    debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
+                else:
+                    debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
             else:
-                debug("payload: {}".format(show))
+                debug("payload: {}\t(len={})".format(show, len(show)))
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic
@@ -283,6 +293,10 @@ class SlaveProcess:
                 # debug
                 if crash:
                     debug("Crash detected!")
+
+                # debug
+                # debug("Before call to __send_to_master()!")
+                # time.sleep(1)
 
                 self.__send_to_master(data, exec_res, info)
         else:

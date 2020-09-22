@@ -14,7 +14,8 @@ import mmap
 import os
 
 # debug
-from debug.log import debug
+from debug.log import *
+import time
 
 
 class GlobalBitmap:
@@ -153,9 +154,10 @@ class BitmapStorage:
         new_bytes, new_bits = relevant_bitmap.get_new_byte_and_bit_counts(exec_result)
 
         # debug
-        """ if exit_reason == 'crash':
-            print('[PYTHON] new_bytes: ' + str(new_bytes))
-            print('[PYTHON] new_bits: ' + str(new_bits)) """
+        """ if new_bytes != 0:
+            debug('new_bytes: ' + str(new_bytes))
+            debug('new_bits: ' + str(new_bits))
+            time.sleep(1) """
 
         return self.check_storage_logic(exec_result, new_bytes, new_bits)
 

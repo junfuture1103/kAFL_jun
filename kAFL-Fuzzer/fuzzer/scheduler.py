@@ -43,7 +43,9 @@ class Scheduler:
 
     # TODO: node skipping by p(x) conflicts with queue sorting..
     def should_be_scheduled(self, queue, node):
-        SKIP_CRASHING_PROB = 80
+        # Always skip crashing node
+        SKIP_CRASHING_PROB = 100
+        """ SKIP_CRASHING_PROB = 80 """
         SKIP_NONFAV_PROB = 50
 
         if node.get_exit_reason() != "regular":
@@ -75,7 +77,9 @@ class Scheduler:
 
         # boost nodes deeper in the tree
         if node.get_level() > 0:
-            score += node.get_level()//5
+            """ score += node.get_level()//5 """
+            # boost more for deeper nodes
+            score += node.get_level() * 2
 
         # boost nodes with many fav bits
         if len(node.get_fav_bits()) > 0:
@@ -87,6 +91,8 @@ class Scheduler:
         if node.get_state() in ["initial", "redq/grim"]:
             phase = 256
         elif node.get_state() in ["deterministic"]:
+            phase = 8
+        elif node.get_state() in ["affix"]:
             phase = 8
         elif node.get_state() in ["havoc"]:
             phase = 1
