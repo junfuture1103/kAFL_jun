@@ -174,7 +174,7 @@ class GuiDrawer:
         curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
         default_col = curses.color_pair(1)
 
-        # Fenster und Hintergrundfarben
+        # window and background colors
         stdscr.bkgd(default_col)
         self.gui = Interface(stdscr)
         self.stdscr = stdscr
@@ -677,14 +677,15 @@ class GuiData:
             return None
 
 
-def main(stdscr):
-    GuiDrawer(sys.argv[1], stdscr)
+def run(stdscr):
+    GuiDrawer('/home/user/kAFL/out', stdscr)
 
-import locale
-locale.setlocale(locale.LC_ALL, '')
-code = locale.getpreferredencoding()
+def main():
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
+    code = locale.getpreferredencoding()
 
-if len(sys.argv) == 2:
-    curses.wrapper(main)
-else:
-    print("Usage: " + sys.argv[0] + " <kafl-workdir>")
+    if len(sys.argv) == 2:
+        curses.wrapper(run)
+    else:
+        print("Usage: " + sys.argv[0] + " <kafl-workdir>")

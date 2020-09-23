@@ -26,17 +26,19 @@ along with QEMU-PT.  If not, see <http://www.gnu.org/licenses/>.
 #define IOCTL_KAFL_INPUT    (ULONG) CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_NEITHER, FILE_ANY_ACCESS)
 
 int main(int argc, char** argv){
-    hprintf("[+] Starting... %s\n", argv[0]);
+    char buf[1024];
 
-    hprintf("[+] Allocating buffer for kAFL_payload struct\n");
+    hprintf("Starting... %s\n", argv[0]);
+
+    hprintf("Allocating buffer for kAFL_payload struct\n");
     kAFL_payload* payload_buffer = (kAFL_payload*)VirtualAlloc(0, PAYLOAD_SIZE, MEM_COMMIT, PAGE_READWRITE);
 
-    hprintf("[+] Memset kAFL_payload at address %lx (size %d)\n", (uint64_t) payload_buffer, PAYLOAD_SIZE);
+    hprintf("Memset kAFL_payload at address %lx (size %d)\n", (uint64_t) payload_buffer, PAYLOAD_SIZE);
     memset(payload_buffer, 0xff, PAYLOAD_SIZE);
 
     /* open vulnerable driver */
     HANDLE kafl_vuln_handle = INVALID_HANDLE_VALUE;
-    hprintf("[+] Attempting to open vulnerable device file (%s)\n", "\\\\.\\testKafl");
+    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\testKafl");
     kafl_vuln_handle = CreateFile((LPCSTR)"\\\\.\\testKafl",
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -52,11 +54,11 @@ int main(int argc, char** argv){
     }
 
     /* submit the guest virtual address of the payload buffer */
-    hprintf("[+] Submitting buffer address to hypervisor...\n");
+    hprintf("Submitting buffer address to hypervisor...\n");
     kAFL_hypercall(HYPERCALL_KAFL_GET_PAYLOAD, (UINT64)payload_buffer);
 
     /* this hypercall submits the current CR3 value */ 
-    hprintf("[+] Submitting current CR3 value to hypervisor...\n");
+    hprintf("Submitting current CR3 value to hypervisor...\n");
     kAFL_hypercall(HYPERCALL_KAFL_SUBMIT_CR3, 0);
 
     while(1){
@@ -64,8 +66,19 @@ int main(int argc, char** argv){
             /* request new payload (*blocking*) */
             kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0); 
 
+            /* copy payload to buf
+             * convert non-printable character to dot
+             */
+            memset(buf, 0, sizeof(buf));
+            strcpy(buf, payload_buffer->data);
+            for (int i = 0; i < strlen(buf); i++) {
+                if (!(0x20 <= buf[i] && buf[i] < 0x80)) {
+                    buf[i] = '.';
+                }
+            }
+
             /* kernel fuzzing */
-            hprintf("[+] Injecting data...\n");
+            hprintf("Injecting data... (payload: %s)\n", buf);
             DeviceIoControl(kafl_vuln_handle,
                 IOCTL_KAFL_INPUT,
                 (LPVOID)(payload_buffer->data),
@@ -77,7 +90,7 @@ int main(int argc, char** argv){
             );
 
             /* inform fuzzer about finished fuzzing iteration */
-            hprintf("[+] Injection finished...\n");
+            hprintf("Injection finished.\n");
             kAFL_hypercall(HYPERCALL_KAFL_RELEASE, 0);
     }
     return 0;

@@ -47,7 +47,7 @@ class InputQueue:
                 msg += info
             msg += '        ]'
             debug(msg)
-            time.sleep(1.5)
+            # time.sleep(1.5)
 
         while self.current_cycle:
             node = self.current_cycle.pop()

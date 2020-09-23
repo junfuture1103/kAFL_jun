@@ -113,7 +113,7 @@ def debug_execution(config, execs, qemu_verbose=False, notifiers=True):
     return 0
 
 def execution_exited_abnormally(qemu):
-    return qemu.crashed or qemu.timeout or qemu.kasan
+    return qemu.crashed, qemu.timeout, qemu.kasan
 
 def debug_non_det(config, payload, max_iterations=0):
     log_debug("Starting non-deterministic...")
@@ -146,8 +146,15 @@ def debug_non_det(config, payload, max_iterations=0):
                 #time.sleep(0.3)
                 bitmap = q.send_payload()
 
-                if execution_exited_abnormally(q):
+                crashed, timeout, kasan = execution_exited_abnormally(q)
+                if crashed:
                     print("Crashed - restarting...")
+                    q.restart()
+                elif timeout:
+                    print("Timeout - restarting...")
+                    q.restart()
+                elif kasan:
+                    print("KASAN - restarting...")
                     q.restart()
 
                 hash_value = bitmap.hash()

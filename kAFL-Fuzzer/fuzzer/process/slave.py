@@ -255,7 +255,7 @@ class SlaveProcess:
         debug(msg) """
 
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
-        crash = self.execution_exited_abnormally()
+        crash, timeout, kasan = self.execution_exited_abnormally()
 
         # show mutated payloads
         if DEBUG_SHOW_PAYLOAD:
@@ -298,8 +298,8 @@ class SlaveProcess:
                 # debug
                 # debug("Before call to __send_to_master()!")
                 # time.sleep(1)
-
                 self.__send_to_master(data, exec_res, info)
+
         else:
             if crash:
                 # Do not discard crashing inputs anymore!
@@ -314,4 +314,4 @@ class SlaveProcess:
         return exec_res, is_new_input
 
     def execution_exited_abnormally(self):
-        return self.q.crashed or self.q.timeout or self.q.kasan
+        return self.q.crashed, self.q.timeout, self.q.kasan
