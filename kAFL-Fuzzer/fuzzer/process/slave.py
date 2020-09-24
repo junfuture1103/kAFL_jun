@@ -27,6 +27,8 @@ from fuzzer.state_logic import FuzzingStateLogic
 from fuzzer.statistics import SlaveStatistics
 from fuzzer.technique.helper import rand
 
+from kafl_fuzz import PAYQ
+
 # debug
 from debug.log import *
 
@@ -268,11 +270,14 @@ class SlaveProcess:
                     show += pay[i]
             if state:
                 if label:
-                    debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
+                    # debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
+                    PAYQ.put(show)
                 else:
-                    debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
+                    # debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
+                    PAYQ.put(show)
             else:
-                debug("payload: {}\t(len={})".format(show, len(show)))
+                # debug("payload: {}\t(len={})".format(show, len(show)))
+                PAYQ.put(show)
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic

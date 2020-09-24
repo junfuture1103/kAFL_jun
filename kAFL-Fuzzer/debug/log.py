@@ -3,10 +3,13 @@
 # Implemented functions for debugging and logging
 # Written by Juhyun Song
 
+# Experimental
+from kafl_fuzz import LOGQ
+
 # debug print flag (todo: make selectable)
-DEBUG_FLOW = True
-DEBUG_STATE = True
-DEBUG_SHOW_QUEUE = True
+DEBUG_FLOW = False
+DEBUG_STATE = False
+DEBUG_SHOW_QUEUE = False
 DEBUG_SHOW_PAYLOAD = True
 
 DEBUG_HAVOC_MAX = 32
@@ -52,8 +55,9 @@ def debug_except(msg):
 
 def debug(msg, newline=False):
     if newline:
-        data = '\n' + YELLOW_PREFIX + msg
+        data = msg
     else:
-        data = YELLOW_PREFIX + msg
+        data = msg
     # print(data)
+    LOGQ.put(data + '\n')
     

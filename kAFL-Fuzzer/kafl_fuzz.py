@@ -17,7 +17,7 @@ from common.self_check import self_check
 from common.config import FuzzerConfiguration
 
 # Experimental
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import time
 import curses
 import kafl_mon
@@ -26,9 +26,10 @@ KAFL_ROOT = os.path.dirname(os.path.realpath(__file__)) + "/"
 KAFL_BANNER = KAFL_ROOT + "banner.txt"
 KAFL_CONFIG = KAFL_ROOT + "kafl.ini"
 
+PAYQ = Queue()
+LOGQ = Queue()
 
 def main():
-
     """ with open(KAFL_BANNER) as f:
         for line in f:
             print(line.replace("\n", "")) """

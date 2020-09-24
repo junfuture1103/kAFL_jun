@@ -514,8 +514,8 @@ class FuzzingStateLogic:
         # add random few bytes
         rand.reseed()
         payload += rand.bytes(APPEND_AMOUNT)
-        debug_flow(f'handle_affix() called.')
-        debug_flow(f'payload: {payload}')
+        """ debug_flow(f'handle_affix() called.')
+        debug_flow(f'payload: {payload}') """
         # time.sleep(1.5)
 
         # debug

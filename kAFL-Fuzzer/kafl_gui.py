@@ -3,7 +3,7 @@
 # Copyright (C) 2017-2019 Sergej Schumilo, Cornelius Aschermann, Tim Blazytko
 # Copyright (C) 2019-2020 Intel Corporation
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SDX-License-Identifier: AGPL-3.0-or-later
 
 """
 Given a kAFL workdir, produce a text-based UI with status summary/overview.

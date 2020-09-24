@@ -1,10 +1,14 @@
 import time
 import glob
+import random
 import psutil
 import curses
 import msgpack
+import inotify.adapters
 from threading import Thread, Lock
 from common.util import read_binary_file
+
+from kafl_fuzz import PAYQ, LOGQ
 
 WORKDIR = ''
 SVCNAME = ''
@@ -59,6 +63,14 @@ class MonitorInterface:
     def __init__(self, stdscr):
         self.stdscr = stdscr
         self.y = 0
+
+    def print_test(self):
+        x = 0
+
+        # data = PAYQ.get()
+        self.stdscr.addstr(self.y, x, ' ' * 40)
+        self.stdscr.addstr(self.y, x, 'aaaa') 
+        self.y += 1
 
     def print_title(self):
         title1 = 'kAFL '
@@ -118,6 +130,8 @@ class MonitorInterface:
         x += len(frag1)
         self.stdscr.addstr(self.y, x, runtime)
         x += len(runtime)
+        
+        self.y += 1
 
 
     def refresh(self):
@@ -182,6 +196,25 @@ class MonitorData:
             if last_found < this_found:
                 self.aggregated["last_found"][node["info"]["exit_reason"]] = this_found
 
+    def load_slave(self, id):
+        self.slave_stats[id] = self.read_file("slave_stats_%d" % id)
+
+    def load_global(self):
+        self.stats = self.read_file("stats")
+
+    def num_slaves(self):
+        return len(self.slave_stats)
+
+    def update(self, pathname, filename):
+        if "node_" in filename:
+            self.load_node(pathname + "/" + filename)
+            self.aggregate()
+        elif "slave_stats" in filename:
+            for i in range(0, self.num_slaves()):
+                self.load_slave(i)
+        elif filename == "stats":
+            self.load_global()
+
     def read_file(self, name):
         retry = 4
         data = None
@@ -201,6 +234,9 @@ class MonitorDrawer:
     def __init__(self, stdscr):
         global WORKDIR
 
+        # mutex lock
+        self.inf_mutex = Lock()
+
         # create pairs of forground and background colors
         curses.init_pair(WHITE, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(RED, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -218,15 +254,24 @@ class MonitorDrawer:
         self.stdscr = stdscr
 
         # create initial statistics
+        self.finished = False
         self.data = MonitorData(WORKDIR)
 
         # create child threads for loop
-        self.thread = Thread(target=self.loop)
+        self.watcher = Thread(target=self.watch, args=(WORKDIR,))
+        self.cpu_watcher = Thread(target=self.watch_cpu, args=())
+        self.thread_loop = Thread(target=self.loop)
 
-        # start drawer loop
+        # start watcher threads
+        self.watcher.daemon = True
+        self.watcher.start()
+        self.cpu_watcher.daemon = True
+        self.cpu_watcher.start()
+
+        # start loop thread
         stdscr.refresh()
-        self.thread.start()
-        self.thread.join()
+        self.thread_loop.start()
+        self.thread_loop.join()
     
     def loop(self):
         while True:
@@ -235,12 +280,51 @@ class MonitorDrawer:
             finally:
                 time.sleep(0.1)
 
+    def watch(self, workdir):
+        d = self.data
+        mask = (inotify.constants.IN_MOVED_TO)
+        self.inotify = inotify.adapters.Inotify()
+        i = self.inotify
+        i.add_watch(workdir, mask)
+        i.add_watch(workdir + "/metadata/", mask)
+
+        for event in i.event_gen(yield_nones=False):
+            if self.finished:
+                return
+            self.inf_mutex.acquire()
+            try:
+                (_, type_names, path, filename) = event
+                d.update(path, filename)
+                self.draw()
+            finally:
+                self.inf_mutex.release()
+
+    def watch_cpu(self):
+        while True:
+            if self.finished:
+                return
+            cpu_info = psutil.cpu_times_percent(interval=2, percpu=False)
+            mem_info = psutil.virtual_memory()
+            swap_info = psutil.swap_memory()
+            self.inf_mutex.acquire()
+            try:
+                self.data.mem = mem_info
+                self.data.cpu = cpu_info
+                self.data.swap = swap_info
+                self.draw()
+            finally:
+                self.inf_mutex.release()
+
     def draw(self):
         # statistics
         data = self.data
 
         self.inf.print_title()
-        self.inf.print_guest_and_overall(data)
+
+        # payload
+        self.inf.print_test()
+
+        # self.inf.print_guest_and_overall(data)
 
         # fflush screen
         self.inf.refresh()
