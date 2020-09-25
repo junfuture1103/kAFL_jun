@@ -60,6 +60,7 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
     else:
         data = data
 
+    # handling havoc
     if not splice:
         for i in range(max_iterations):
             stacking = rand.int(AFL_HAVOC_STACK_POW2)
@@ -77,18 +78,23 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
             # Execute test logic for max_iterations times
             """ func(data, state=state) """
             func(data, state=state)
+    
+    # handling splice
     else:
         state = 'splice'
         
         for i in range(max_iterations):
             stacking = rand.int(AFL_HAVOC_STACK_POW3)
 
-            # for j in range(1 << (1 + stacking)):
             for j in range(1):
                 handler = rand.select(havoc_handler)
                 newdata = ''
                 while len(newdata) <= (len(data) // 2):
                     newdata = handler(data)
+                
+                # test - havoc it again
+                newdata = handler(newdata)
+
                 if len(newdata) >= KAFL_MAX_FILE:
                     newdata = newdata[:KAFL_MAX_FILE]
 
@@ -97,14 +103,15 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
                 newdata = newdata[:HAVOC_MAX_LEN]
             
             # Execute test logic for max_iterations times
-            """ func(data, state=state) """
             func(newdata, state=state)
 
 
 def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None):
     global location_corpus
     splice_rounds = 8
-    files = glob.glob(location_corpus + "/*/payload_*")
+    # files = glob.glob(location_corpus + "/*/payload_*")
+    # test - splice with only regular inputs only
+    files = glob.glob(location_corpus + "/regular/payload_*")   
     for _ in range(splice_rounds):
 
         spliced_data, split_location = havoc_splicing(data, files)

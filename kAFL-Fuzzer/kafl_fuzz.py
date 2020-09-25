@@ -19,8 +19,6 @@ from common.config import FuzzerConfiguration
 
 # Experimental
 from multiprocessing import Process, Queue, Pool
-import time
-import curses
 import kafl_mon
 
 KAFL_ROOT = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -40,12 +38,12 @@ def main():
     enable_tui = cfg.argument_values['tui']
     
     # Experimental multiprocessing
-    # Here we execute fuzzer and monitor process altogether
+    # Here we execute fuzzer and monitor process together
     if enable_tui:
         import kafl_conf
-        kafl_conf.SHOW_PAYLOAD = True
+        kafl_conf.SHOW_PAYLOAD = True   # payload should be transferred through queue
         kafl_conf.ENABLE_TUI = True
-        kafl_conf.ENABLE_LOG = False    # other logging should be off!
+        kafl_conf.ENABLE_LOG = False    # other logging scheme should be off
         
         procs = []
         procs.append(Process(target=fuzzer.core.start, args=(cfg,)))
@@ -56,6 +54,9 @@ def main():
 
         for proc in procs:
             proc.join()
+
+    # Default behavior
+    # Exetute fuzzer only and print log through terminal
     else:
         import kafl_conf
         kafl_conf.ENABLE_TUI = False

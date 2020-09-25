@@ -182,6 +182,7 @@ class MonitorInterface:
     def print_info_line(self, pairs, sep=" │ ", end="│", prefix="", dynaidx=None):
         x = 0
         infos = []
+
         for info in pairs:
             infolen = len(info[1]) + len(info[2])
             if infolen == 0:
@@ -511,6 +512,6 @@ def main(workdir):
     SVCNAME = 'testDriver'  # todo - receive in args
 
     # delay for files to be generated
-    time.sleep(1)
+    time.sleep(0.5)
 
     curses.wrapper(run)
