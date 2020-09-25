@@ -93,7 +93,7 @@ class FuzzingStateLogic:
         nid = metadata['id']
         if SHOW_STATE:
             debug("\033[1;36mNode " + str(nid) + "\033[0m entered \033[1;34m" + metadata["state"]["name"] + " \033[0mstage!", newline=True)
-            time.sleep(1)
+            time.sleep(0.5)
 
         if metadata["state"]["name"] == "import":
             self.handle_import(payload, metadata)
@@ -182,9 +182,9 @@ class FuzzingStateLogic:
         # TODO: We also seem to have some corner case where PT feedback does not
         # work and the seed has to be provided multiple times to actually
         # (eventually) be recognized correctly..
-        if not is_new:
+        """ if not is_new:
             print("Imported payload produced no new coverage, skipping..")
-            log_slave("`Imported payload produced no new coverage, skipping..", self.slave.slave_id)
+            log_slave("`Imported payload produced no new coverage, skipping..", self.slave.slave_id) """
 
 
     def handle_initial(self, payload, metadata):
@@ -540,7 +540,7 @@ class FuzzingStateLogic:
         else:
             self.stage_update_label("afl_havoc")
             # nerf pure havoc phase
-            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount / 2, state=metadata['state']['name'])
+            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount // 2, state=metadata['state']['name'])
 
 
     def __check_colorization(self, orig_hash, payload_array, min, max):

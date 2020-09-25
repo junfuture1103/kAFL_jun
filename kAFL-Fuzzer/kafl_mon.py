@@ -141,6 +141,7 @@ class MonitorInterface:
         self.stdscr.addstr(self.y, x, pad2, BOLD)
         x += pad_len2
         self.stdscr.addstr(self.y, x, title3, color(CYAN) + BOLD)
+
         self.y += 2
 
     def print_guest_and_overall(self):
@@ -213,7 +214,6 @@ class MonitorData:
         self.load_initial()
 
     def load_initial(self):
-        print("Waiting for slaves to launch..")
         self.cpu = psutil.cpu_times_percent(interval=0.01, percpu=False)
         self.mem = psutil.virtual_memory()
         self.cores_phys = psutil.cpu_count(logical=False)
@@ -436,7 +436,7 @@ class MonitorDrawer:
 
         # enter critical section
         self.key.acquire()
-
+        
         # fuzzer graphics
         self.inf.print_title()
         self.inf.print_guest_and_overall()

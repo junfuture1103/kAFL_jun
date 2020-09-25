@@ -3,6 +3,8 @@
 # Implemented functions for debugging and logging
 # Written by Juhyun Song
 
+from kafl_conf import ENABLE_LOG
+
 # prefix
 EXCEPT_PREFIX = '\033[1;31m[EXCEPT]\033[0m '
 ERROR_PREFIX = '\033[1;31m[EXCEPT]\033[0m '
@@ -14,31 +16,42 @@ YELLOW_PREFIX = '\033[1;33m[DEBUG]\033[0m '
 
 def debug_info(msg):
     data = INFO_PREFIX + msg
-    print(data)
+    if ENABLE_LOG:
+        print(data)
 
 def debug_kafl(msg, newline=False):
     if newline:
-        print('\n' + KAFL_PREFIX + msg)
+        data = '\n' + KAFL_PREFIX + msg
     else:
-        print(KAFL_PREFIX + msg)
+        data = KAFL_PREFIX + msg
+    if ENABLE_LOG:
+        print(data)
 
 def debug_flow(msg):
     data = FLOW_PREFIX + msg
-    print(data)
+    if ENABLE_LOG:
+        print(data)
 
 def debug_warn(msg):
-    print(WARN_PREFIX + msg)
+    data = WARN_PREFIX + msg
+    if ENABLE_LOG:
+        print(data)
 
 def debug_error(msg):
-    print(ERROR_PREFIX + msg)
+    data = ERROR_PREFIX + msg
+    if ENABLE_LOG:
+        print(data)
 
 def debug_except(msg):
-    print(EXCEPT_PREFIX + msg)
+    data = EXCEPT_PREFIX + msg
+    if ENABLE_LOG:
+        print(data)
 
 def debug(msg, newline=False):
     if newline:
         data = '\n' + YELLOW_PREFIX + msg
     else:
         data = YELLOW_PREFIX + msg
-    print(data)
+    if ENABLE_LOG:
+        print(data)
     

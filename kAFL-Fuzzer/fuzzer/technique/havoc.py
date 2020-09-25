@@ -115,7 +115,7 @@ def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None
             return # could not find any suitable splice pair for this file
         mutate_seq_havoc_array(spliced_data,
                                func,
-                               int(2*max_iterations/splice_rounds),
+                               int(2*max_iterations // splice_rounds),
                                resize=resize,
                                state=state,
                                splice=True,
