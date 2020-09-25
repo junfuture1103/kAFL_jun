@@ -40,6 +40,12 @@ def main():
     # Experimental multiprocessing
     # Here we execute fuzzer and monitor process together
     if enable_tui:
+        # Check terminal window size
+        row, col = os.popen('stty size', 'r').read().split()
+        if int(row) < 24 or int(col) < 82:
+            print("Your terminal is too small to show monitor!")
+            sys.exit()
+
         import kafl_conf
         kafl_conf.SHOW_PAYLOAD = True   # payload should be transferred through queue
         kafl_conf.ENABLE_TUI = True
