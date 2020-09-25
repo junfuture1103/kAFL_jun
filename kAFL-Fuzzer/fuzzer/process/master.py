@@ -25,7 +25,8 @@ from fuzzer.bitmap import BitmapStorage
 from fuzzer.node import QueueNode
 
 # debug
-from debug.log import *
+from debug.log import debug_info, debug_flow
+from kafl_conf import SHOW_FLOW
 import time
 
 class MasterProcess:
@@ -87,11 +88,6 @@ class MasterProcess:
                         self.queue.update_node_results(msg["node_id"], msg["results"], msg["new_payload"])
                     self.send_next_task(conn)
                 elif msg["type"] == MSG_NEW_INPUT:
-                    # Slave reports new interesting input
-                    if DEBUG_FLOW:
-                        debug_flow('MSG_NEW_INPUT')
-                        debug_flow('interesting input: ' + str(msg['input']['payload']))
-
                     log_master("Received new input: {}".format(repr(msg["input"]["payload"])))
                     node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)

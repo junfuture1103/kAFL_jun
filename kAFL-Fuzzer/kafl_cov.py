@@ -35,7 +35,7 @@ import json
 import csv
 
 # debug
-from debug.log import *
+from debug.log import debug
 
 class TraceParser:
     def __init__(self):

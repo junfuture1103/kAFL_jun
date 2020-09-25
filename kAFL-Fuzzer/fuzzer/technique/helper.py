@@ -28,6 +28,7 @@ AFL_ARITH_MAX = 35
 AFL_HAVOC_MIN = 256
 AFL_HAVOC_CYCLES = 5000
 AFL_HAVOC_STACK_POW2 = 7
+AFL_HAVOC_STACK_POW3 = 1
 
 interesting_8_Bit = [-128, -1, 0, 1, 16, 32, 64, 100, 127]
 interesting_16_Bit = interesting_8_Bit + [-32768, -129, 128, 255, 256, 512, 1000, 1024, 4096, 32767]
@@ -63,7 +64,7 @@ def AFL_choose_block_len(limit):
             max_value = HAVOC_BLK_LARGE
 
     if min_value >= limit:
-        min_value = 1;
+        min_value = 1
 
     return min_value + rand.int(MIN(max_value, limit) - min_value + 1);
 

@@ -27,7 +27,8 @@ from fuzzer.technique.trim import perform_trim, perform_center_trim
 from fuzzer.technique.helper import rand
 
 # debug
-from debug.log import *
+from debug.log import debug
+from kafl_conf import SHOW_STATE, ENABLE_TUI
 
 class FuzzingStateLogic:
     HAVOC_MULTIPLIER = 2
@@ -90,7 +91,7 @@ class FuzzingStateLogic:
 
         # debug
         nid = metadata['id']
-        if DEBUG_STATE:
+        if SHOW_STATE:
             debug("\033[1;36mNode " + str(nid) + "\033[0m entered \033[1;34m" + metadata["state"]["name"] + " \033[0mstage!", newline=True)
             time.sleep(1)
 
@@ -108,14 +109,6 @@ class FuzzingStateLogic:
             resume, afl_det_info = self.handle_deterministic(payload, metadata)
             if resume:
                 return self.create_update({"name": "deterministic"}, {"afl_det_info": afl_det_info}), None
-            elif RAND_APPEND:
-                return self.create_update({"name": "affix"}, {"afl_det_info": afl_det_info}), None
-            else:
-                return self.create_update({"name": "havoc"}, {"afl_det_info": afl_det_info}), None
-        elif metadata["state"]["name"] == "affix":
-            resume, afl_det_info = self.handle_affix(payload, metadata)
-            if resume:
-                return self.create_update({"name": "affix"}, {"afl_det_info": afl_det_info}), None
             else:
                 return self.create_update({"name": "havoc"}, {"afl_det_info": afl_det_info}), None
         elif metadata["state"]["name"] == "havoc":
@@ -178,6 +171,9 @@ class FuzzingStateLogic:
         # debug
         state = metadata['state']['name']
 
+        _, is_new = self.execute(payload, label="import", state=state)
+        _, is_new = self.execute(payload, label="import", state=state)
+        _, is_new = self.execute(payload, label="import", state=state)
         _, is_new = self.execute(payload, label="import", state=state)
 
         # Inform user if seed yields no new coverage. This may happen if -ip0 is
@@ -504,94 +500,6 @@ class FuzzingStateLogic:
         return False, det_info
 
 
-    # Experimental feature
-    # Add random few bytes and repeat deterministic phase
-    def handle_affix(self, payload, metadata):
-        # skip deterministic phase when argument '-D' exists
-        if not self.config.argument_values['D']:
-            return False, {}
-
-        # add random few bytes
-        rand.reseed()
-        payload += rand.bytes(APPEND_AMOUNT)
-        """ debug_flow(f'handle_affix() called.')
-        debug_flow(f'payload: {payload}') """
-        # time.sleep(1.5)
-
-        # debug
-        state = metadata['state']['name']
-
-        skip_zero = self.config.argument_values['s']
-        arith_max = self.config.config_values["ARITHMETIC_MAX"]
-        use_effector_map = self.config.argument_values['d'] and len(payload) > 128
-        limiter_map = self.create_limiter_map(payload)
-        effector_map = None
-
-        # Mutable payload allows faster bitwise manipulations
-        payload_array = bytearray(payload)
-
-        default_info = {"stage": "flip_1"}
-        det_info = metadata.get("afl_det_info", default_info)
-        
-        # reset det_info
-        det_info['stage'] = 'flip_1'
-
-        # Walking bitflips
-        if det_info["stage"] == "flip_1":
-            bitflip.mutate_seq_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
-            bitflip.mutate_seq_two_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
-            bitflip.mutate_seq_four_walking_bits(payload_array, self.execute, skip_null=skip_zero, effector_map=limiter_map, state=state)
-
-            det_info["stage"] = "flip_8"
-            if self.stage_timeout_reached():
-                return True, det_info
-
-        # Walking byte sets..
-        if det_info["stage"] == "flip_8":
-            # Generate AFL-style effector map based on walking_bytes()
-            if use_effector_map:
-                log_slave("Preparing effector map..", self.slave.slave_id)
-                effector_map = bytearray(limiter_map)
-
-            bitflip.mutate_seq_walking_byte(payload_array, self.execute, skip_null=skip_zero, limiter_map=limiter_map, effector_map=effector_map, state=state)
-
-            if use_effector_map:
-                self.dilate_effector_map(effector_map, limiter_map)
-            else:
-                effector_map = limiter_map
-
-            bitflip.mutate_seq_two_walking_bytes(payload_array,  self.execute, effector_map=effector_map, state=state)
-            bitflip.mutate_seq_four_walking_bytes(payload_array, self.execute, effector_map=effector_map, state=state)
-
-            det_info["stage"] = "arith"
-            if effector_map:
-                det_info["eff_map"] = bytearray(effector_map)
-            if self.stage_timeout_reached():
-                return True, det_info
-
-        # Arithmetic mutations..
-        if det_info["stage"] == "arith":
-            effector_map = det_info.get("eff_map", None)
-            arithmetic.mutate_seq_8_bit_arithmetic(payload_array,  self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
-            arithmetic.mutate_seq_16_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
-            arithmetic.mutate_seq_32_bit_arithmetic(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
-
-            det_info["stage"] = "intr"
-            if self.stage_timeout_reached():
-                return True, det_info
-
-        # Interesting value mutations..
-        if det_info["stage"] == "intr":
-            effector_map = det_info.get("eff_map", None)
-            interesting_values.mutate_seq_8_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, state=state)
-            interesting_values.mutate_seq_16_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
-            interesting_values.mutate_seq_32_bit_interesting(payload_array, self.execute, skip_null=skip_zero, effector_map=effector_map, arith_max=arith_max, state=state)
-
-            det_info["stage"] = "done"
-
-        return False, det_info
-
-
     def __perform_rq_dict(self, payload_array, metadata):
         rq_dict = havoc.get_redqueen_dict()
         counter = 0
@@ -631,7 +539,8 @@ class FuzzingStateLogic:
             havoc.mutate_seq_splice_array(payload_array, self.execute, havoc_amount, state=metadata['state']['name'])
         else:
             self.stage_update_label("afl_havoc")
-            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount, state=metadata['state']['name'])
+            # nerf pure havoc phase
+            havoc.mutate_seq_havoc_array(payload_array, self.execute, havoc_amount / 2, state=metadata['state']['name'])
 
 
     def __check_colorization(self, orig_hash, payload_array, min, max):

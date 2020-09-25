@@ -8,13 +8,13 @@ AFL-style havoc and splicing stage
 """
 
 import glob
+import time
 
 from common.config import FuzzerConfiguration
 from fuzzer.technique.havoc_handler import *
 
-# debug
-from debug.log import *
-
+from debug.log import debug_flow
+from kafl_conf import HAVOC_MAX_LEN
 
 def load_dict(file_name):
     f = open(file_name)
@@ -60,41 +60,57 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
     else:
         data = data
 
-    for i in range(max_iterations):
-        stacking = rand.int(AFL_HAVOC_STACK_POW2)
+    if not splice:
+        for i in range(max_iterations):
+            stacking = rand.int(AFL_HAVOC_STACK_POW2)
 
-        if not splice:
             for j in range(1 << (1 + stacking)):
                 handler = rand.select(havoc_handler)
                 data = handler(data)
                 if len(data) >= KAFL_MAX_FILE:
                     data = data[:KAFL_MAX_FILE]
-        # Experimental
-        else:
-            state = 'splice'
 
-            for j in range(1 << (1 + stacking)):
-                handler = rand.select(havoc_handler)
-                newdata = handler(data)
-                data = data[:split_location] + newdata
-                if len(data) >= KAFL_MAX_FILE:
-                    data = data[:KAFL_MAX_FILE]
-
-        # test
-        if len(data) >= DEBUG_HAVOC_MAX:
-            data = data[:DEBUG_HAVOC_MAX]
+            # test
+            if len(data) >= HAVOC_MAX_LEN:
+                data = data[:HAVOC_MAX_LEN]
+            
+            # Execute test logic for max_iterations times
+            """ func(data, state=state) """
+            func(data, state=state)
+    else:
+        state = 'splice'
         
-        # Execute test logic for max_iterations times
-        """ func(data, state=state) """
-        func(data, state=state)
+        for i in range(max_iterations):
+            stacking = rand.int(AFL_HAVOC_STACK_POW3)
+
+            # for j in range(1 << (1 + stacking)):
+            for j in range(1):
+                handler = rand.select(havoc_handler)
+                newdata = ''
+                while len(newdata) <= (len(data) // 2):
+                    newdata = handler(data)
+                if len(newdata) >= KAFL_MAX_FILE:
+                    newdata = newdata[:KAFL_MAX_FILE]
+
+            # test
+            if len(newdata) >= HAVOC_MAX_LEN:
+                newdata = newdata[:HAVOC_MAX_LEN]
+            
+            # Execute test logic for max_iterations times
+            """ func(data, state=state) """
+            func(newdata, state=state)
 
 
 def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None):
     global location_corpus
-    splice_rounds = 16
+    splice_rounds = 8
     files = glob.glob(location_corpus + "/*/payload_*")
     for _ in range(splice_rounds):
+
         spliced_data, split_location = havoc_splicing(data, files)
+        """ debug_flow('spliced_data: ' + str(spliced_data))
+        time.sleep(1) """
+
         if spliced_data is None:
             return # could not find any suitable splice pair for this file
         mutate_seq_havoc_array(spliced_data,

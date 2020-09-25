@@ -11,7 +11,8 @@ from fuzzer.scheduler import Scheduler
 
 # debug
 import time
-from debug.log import *
+from debug.log import debug
+from kafl_conf import SHOW_QUEUE
 
 class InputQueue:
     def __init__(self, config, statistics):
@@ -28,7 +29,7 @@ class InputQueue:
             return None
 
         # debug
-        if DEBUG_SHOW_QUEUE and len(self.current_cycle) != 0:
+        if SHOW_QUEUE and len(self.current_cycle) != 0:
             msg = 'self.current_cycle: [\n'
             queue = self.current_cycle
             for i in range(len(queue)):

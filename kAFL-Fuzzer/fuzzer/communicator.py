@@ -20,7 +20,7 @@ MSG_NEW_INPUT = 4
 MSG_BUSY = 5
 
 # debug
-from debug.log import *
+from debug.log import debug_error
 
 class ServerConnection:
 

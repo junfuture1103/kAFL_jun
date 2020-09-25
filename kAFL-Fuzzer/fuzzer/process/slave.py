@@ -28,6 +28,7 @@ from fuzzer.statistics import SlaveStatistics
 from fuzzer.technique.helper import rand
 
 from kafl_fuzz import PAYQ
+from kafl_conf import SHOW_PAYLOAD, ENABLE_TUI
 
 # debug
 from debug.log import *
@@ -104,10 +105,6 @@ class SlaveProcess:
     def handle_node(self, msg):
         meta_data = QueueNode.get_metadata(msg["task"]["nid"])
         payload = QueueNode.get_payload(meta_data["info"]["exit_reason"], meta_data["id"])
-
-        # debug
-        """ if DEBUG_STATE:
-            debug('handle_node() called. nid: {}'.format(meta_data['id'])) """
 
         results, new_payload = self.logic.process_node(payload, meta_data)
 
@@ -260,7 +257,7 @@ class SlaveProcess:
         crash, timeout, kasan = self.execution_exited_abnormally()
 
         # show mutated payloads
-        if DEBUG_SHOW_PAYLOAD:
+        if SHOW_PAYLOAD:
             pay = data.decode('iso-8859-9').encode('utf-8').decode('utf-8')
             show = ''
             for i in range(len(pay)):
@@ -270,13 +267,13 @@ class SlaveProcess:
                     show += pay[i]
             if state:
                 if label:
-                    # debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
-                    PAYQ.put(show)
+                    debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
                 else:
-                    # debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
-                    PAYQ.put(show)
+                    debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
             else:
-                # debug("payload: {}\t(len={})".format(show, len(show)))
+                debug("payload: {}\t(len={})".format(show, len(show)))
+                
+            if ENABLE_TUI:
                 PAYQ.put(show)
 
         # store crashes and any validated new behavior

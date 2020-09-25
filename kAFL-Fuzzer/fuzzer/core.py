@@ -26,7 +26,7 @@ from fuzzer.process.master import MasterProcess
 from fuzzer.process.slave import slave_loader
 
 # debug
-from debug.log import *
+from debug.log import debug_warn, debug_except, debug_kafl
 
 def qemu_sweep():
     pids = pgrep.pgrep("qemu")

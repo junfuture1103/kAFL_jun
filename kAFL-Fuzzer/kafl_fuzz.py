@@ -11,13 +11,15 @@ Launcher for Fuzzing with kAFL. Check fuzzer/core.py for more.
 
 import os
 import sys
+import signal
 
 import common.color
 from common.self_check import self_check
 from common.config import FuzzerConfiguration
 
 # Experimental
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pool
+from kafl_conf import ENABLE_TUI
 import time
 import curses
 import kafl_mon
@@ -26,29 +28,38 @@ KAFL_ROOT = os.path.dirname(os.path.realpath(__file__)) + "/"
 KAFL_BANNER = KAFL_ROOT + "banner.txt"
 KAFL_CONFIG = KAFL_ROOT + "kafl.ini"
 
+# Shared queue between fuzzer and monitor
 PAYQ = Queue()
-LOGQ = Queue()
 
 def main():
-    """ with open(KAFL_BANNER) as f:
-        for line in f:
-            print(line.replace("\n", "")) """
-
-    """ print("<< " + common.color.BOLD + common.color.OKGREEN +
-            sys.argv[0] + ": Kernel Fuzzer " + common.color.ENDC + ">>\n") """
-
     if not self_check(KAFL_ROOT):
         return 1
 
     import fuzzer.core
     cfg = FuzzerConfiguration(KAFL_CONFIG)
     workdir = cfg.argument_values['work_dir']
+    enable_tui = cfg.argument_values['tui']
     
     # Experimental multiprocessing
     # Here we execute fuzzer and monitor process altogether
+    if enable_tui:
+        ENABLE_TUI = True
+        
+    """ procs = []
+        procs.append(Process(target=fuzzer.core.start, args=(cfg,)))
+        procs.append(Process(target=kafl_mon.main, args=(workdir,)))
+
+        for proc in procs:
+            proc.start()
+
+        for proc in procs:
+            proc.join()
+    else:
+        fuzzer.core.start(cfg) """
+
     procs = []
     procs.append(Process(target=fuzzer.core.start, args=(cfg,)))
-    procs.append(Process(target=kafl_mon.main, args=(workdir,)))
+    procs.append(Process(target=kafl_mon.main, args=(workdir, PAYQ)))
 
     for proc in procs:
         proc.start()

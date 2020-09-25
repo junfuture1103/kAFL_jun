@@ -13,10 +13,6 @@ import inspect
 import mmap
 import os
 
-# debug
-from debug.log import *
-import time
-
 
 class GlobalBitmap:
     bitmap_native_so = ctypes.CDLL(
@@ -152,12 +148,6 @@ class BitmapStorage:
 
         relevant_bitmap = self.get_bitmap_for_node_type(exec_result.exit_reason)
         new_bytes, new_bits = relevant_bitmap.get_new_byte_and_bit_counts(exec_result)
-
-        # debug
-        """ if new_bytes != 0:
-            debug('new_bytes: ' + str(new_bytes))
-            debug('new_bits: ' + str(new_bits))
-            time.sleep(1) """
 
         return self.check_storage_logic(exec_result, new_bytes, new_bits)
 

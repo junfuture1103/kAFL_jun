@@ -8,10 +8,12 @@ import inotify.adapters
 from threading import Thread, Lock
 from common.util import read_binary_file
 
-from kafl_fuzz import PAYQ, LOGQ
-
 WORKDIR = ''
 SVCNAME = ''
+PAYQ = None
+
+# current payload
+PAYLOAD = ''
 
 # screen width
 WIDTH = 80
@@ -25,29 +27,66 @@ BLUE = 5
 MAGENTA = 6
 CYAN = 7
 
-# box drawing characters
-B_HR = '─'
-B_VT = '│'
-B_LU = '┌'
-B_LM = '├'
-B_LD = '└'
-B_CU = '┬'
-B_CM = '┼'
-B_CD = '┴'
-B_RU = '┐'
-B_RM = '┤'
-B_RD = '┘'
-
+BOLD = curses.A_BOLD
+DIM = curses.A_DIM
 
 # helper function for color pairs
 def color(code):
     return curses.color_pair(code)
 
+# helper function for formatting number
+def pnum(num):
+    assert num >= 0
+    if num <= 9999:
+        return "%d" % num
+    num /= 1000.0
+    if num <= 999:
+        return "%.1fk" % num
+    num /= 1000.0
+    if num <= 999:
+        return "%.1fm" % num
+    num /= 1000.0
+    if num <= 999:
+        return "%.1fg" % num
+    num /= 1000.0
+    if num <= 999:
+        return "%.1ft" % num
+    num /= 1000.0
+    if num <= 999:
+        return "%.1fp" % num
+    assert False
+
+def pfloat(flt):
+    assert flt >= 0
+    if flt <= 999:
+        return "%.1f" % flt
+    return pnum(flt)
+
+def pbyte(num):
+    assert num >= 0
+    if num <= 999:
+        return "%d" % num
+    num /= 1024.0
+    if num <= 999:
+        return "%.1fk" % num
+    num /= 1024.0
+    if num <= 999:
+        return "%.1fm" % num
+    num /= 1024.0
+    if num <= 999:
+        return "%.1fg" % num
+    num /= 1024.0
+    if num <= 999:
+        return "%.1ft" % num
+    num /= 1024.0
+    if num <= 999:
+        return "%.1fp" % num
+    assert False
 
 # helper function for formatting timestamps
 def ptime(secs):
     if not secs:
-        return "None Yet"
+        return "none yet"
 
     secs = int(secs)
     seconds = secs % 60
@@ -56,20 +95,23 @@ def ptime(secs):
     secs //= 60
     hours = secs % 24
     days = secs  // 24
-    return "%2d days,%2d hrs,%2d min,%2d sec" % (days, hours, mins, seconds)
+    return "%d days, %d hrs, %d min, %d sec" % (days, hours, mins, seconds)
 
 
 class MonitorInterface:
     def __init__(self, stdscr):
         self.stdscr = stdscr
         self.y = 0
-
+        
     def print_test(self):
-        x = 0
+        global PAYLOAD 
 
-        # data = PAYQ.get()
+        if not PAYQ.empty():
+            PAYLOAD = PAYQ.get()
+
+        x = 0
         self.stdscr.addstr(self.y, x, ' ' * 40)
-        self.stdscr.addstr(self.y, x, 'aaaa') 
+        self.stdscr.addstr(self.y, x, PAYLOAD[:20]) 
         self.y += 1
 
     def print_title(self):
@@ -86,53 +128,77 @@ class MonitorInterface:
         x = 0
         self.y += 1     # empty line
 
-        self.stdscr.addstr(self.y, x, pad1)
+        self.stdscr.addstr(self.y, x, pad1, BOLD)
         x += pad_len1
-        self.stdscr.addstr(self.y, x, title1, color(YELLOW))
+        self.stdscr.addstr(self.y, x, title1, color(YELLOW) + BOLD)
         x += len(title1)
-        self.stdscr.addstr(self.y, x, title2, color(GREEN))
+        self.stdscr.addstr(self.y, x, title2, color(GREEN) + BOLD)
         x += len(title2)
-        self.stdscr.addstr(self.y, x, pad1)
+        self.stdscr.addstr(self.y, x, pad1, BOLD)
         self.y += 1
 
         x = 0
-        self.stdscr.addstr(self.y, x, pad2)
+        self.stdscr.addstr(self.y, x, pad2, BOLD)
         x += pad_len2
-        self.stdscr.addstr(self.y, x, title3, color(CYAN))
+        self.stdscr.addstr(self.y, x, title3, color(CYAN) + BOLD)
         self.y += 2
 
-    def print_guest_and_overall(self, data):
-        # line 1
-        frag1 = '┌─ '
-        frag2 = '───────────────────────────────────────┬─ '
-        frag3 = '─────┐'
-        title1 = 'guest timing '
-        title2 = 'overall results '
-        
-        x = 0
-        self.stdscr.addstr(self.y, x, frag1)
-        x += len(frag1)
-        self.stdscr.addstr(self.y, x, title1, color(CYAN))
-        x += len(title1)
-        self.stdscr.addstr(self.y, x, frag2)
-        x += len(frag2)
-        self.stdscr.addstr(self.y, x, title2, color(CYAN))
-        x += len(title2)
-        self.stdscr.addstr(self.y, x, frag3)
+    def print_guest_and_overall(self):
+        self.stdscr.addstr(self.y, 0, '┌─', DIM)
+        self.stdscr.addstr(self.y, 2, ' guest timing ', color(CYAN))
+        self.stdscr.addstr(self.y, 16, '─'*37 + '┬─', DIM)
+        self.stdscr.addstr(self.y, 55, ' overall results ', color(CYAN))
+        self.stdscr.addstr(self.y, 72, '─'*7 + '┐', DIM)
         self.y += 1
 
-        # line 2
-        frag1 = '│        run time :'
-        runtime = ptime(data.runtime())
-
-        x = 0
-        self.stdscr.addstr(self.y, x, frag1)
-        x += len(frag1)
-        self.stdscr.addstr(self.y, x, runtime)
-        x += len(runtime)
-        
+    def print_execution_and_map(self):
+        self.stdscr.addstr(self.y, 0, '├─', DIM)
+        self.stdscr.addstr(self.y, 2, ' execution progress ', color(CYAN))
+        self.stdscr.addstr(self.y, 22, '─'*14 + '┬─', DIM)
+        self.stdscr.addstr(self.y, 38, ' map coverage ', color(CYAN))
+        self.stdscr.addstr(self.y, 52,  '─┴'+ '─'*25 + '┤', DIM)
         self.y += 1
 
+    def print_node_and_machine(self):
+        self.stdscr.addstr(self.y, 0, '├─', DIM)
+        self.stdscr.addstr(self.y, 2, ' node progress ', color(CYAN))
+        self.stdscr.addstr(self.y, 17, '─'*19 + '┼─', DIM)
+        self.stdscr.addstr(self.y, 38, ' machine stats ', color(CYAN))
+        self.stdscr.addstr(self.y, 53, '─'*26 + '┤', DIM)
+        self.y += 1
+
+    def print_payload_info(self):
+        self.stdscr.addstr(self.y, 0, '├─', DIM)
+        self.stdscr.addstr(self.y, 2, ' payload info ', color(CYAN))
+        self.stdscr.addstr(self.y, 16, '─'*20 + '┴─', DIM)
+        self.stdscr.addstr(self.y, 37, '─'*42 + '┤', DIM)
+        self.y += 1
+
+    def print_bottom_line(self):
+        self.stdscr.addstr(self.y, 0, '└' + '─'*78 + '┘', DIM)
+
+    def print_info_line(self, pairs, sep=" │ ", end="│", prefix="", dynaidx=None):
+        x = 0
+        infos = []
+        for info in pairs:
+            infolen = len(info[1]) + len(info[2])
+            if infolen == 0:
+                infos.append(" ".ljust(info[0]+2))
+            else:
+                infos.append(" %s : %s %s" % (
+                    info[1], info[2], " ".ljust(info[0]-infolen)))
+
+        self.stdscr.addstr(self.y, x, '│', DIM)
+        x += 1
+        for info in infos:
+            self.stdscr.addstr(self.y, x, prefix + info + " ")
+            x += len(info)
+            self.stdscr.addstr(self.y, x, sep, DIM)
+            x += len(sep)
+            self.stdscr.addstr(self.y, x, " ", DIM)
+            x += len(" ")
+
+        self.y += 1
 
     def refresh(self):
         self.y = 0
@@ -202,8 +268,56 @@ class MonitorData:
     def load_global(self):
         self.stats = self.read_file("stats")
 
+    def node_size(self, nid):
+        return self.nodes[nid]["payload_len"]
+
+    def node_parent_id(self, nid):
+        return self.nodes[nid]["info"]["parent"]
+
     def num_slaves(self):
         return len(self.slave_stats)
+
+    def num_found(self, reason):
+        return self.aggregated["exit_reasons"][reason]
+
+    def cpu_used(self):
+        return self.cpu.user + self.cpu.system
+
+    def ram_used(self):
+        return 100 * float(self.mem.used) / float(self.mem.total)
+
+    def slave_input_id(self, i):
+        return self.slave_stats[i]["node_id"]
+
+    def slave_stage(self, i):
+        method = self.slave_stats[i].get("method", None)
+        stage  = self.slave_stats[i].get("stage", "waiting...")
+        if method:
+            #return "%s/%s" % (stage[0:6],method[0:12])
+            return "%s" % method[0:14]
+        else:
+            return stage[0:14]
+
+    def execs_p_sec_avg(self):
+        return self.total_execs()/self.runtime()
+
+    def total_execs(self):
+        return sum([x["total_execs"] for x in self.slave_stats])
+
+    def time_since(self, reason):
+        time_stamp = self.aggregated["last_found"][reason]
+        if not time_stamp:
+            return None
+        return self.starttime + self.runtime() - time_stamp
+
+    def bitmap_size(self):
+        return 64 * 1024
+
+    def bitmap_used(self):
+        return self.stats["bytes_in_bitmap"]
+
+    def p_coll(self):
+        return 100.0 * float(self.bitmap_used()) / float(self.bitmap_size())
 
     def update(self, pathname, filename):
         if "node_" in filename:
@@ -236,6 +350,7 @@ class MonitorDrawer:
 
         # mutex lock
         self.inf_mutex = Lock()
+        self.key = Lock()
 
         # create pairs of forground and background colors
         curses.init_pair(WHITE, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -278,7 +393,7 @@ class MonitorDrawer:
             try:
                 self.draw()
             finally:
-                time.sleep(0.1)
+                time.sleep(0.0001)
 
     def watch(self, workdir):
         d = self.data
@@ -316,28 +431,83 @@ class MonitorDrawer:
                 self.inf_mutex.release()
 
     def draw(self):
-        # statistics
-        data = self.data
+        # statistic data
+        d = self.data
 
+        # enter critical section
+        self.key.acquire()
+
+        # fuzzer graphics
         self.inf.print_title()
+        self.inf.print_guest_and_overall()
+        self.inf.print_info_line([
+            (46, "     run time", ptime(d.runtime())),
+            (17, "  crash", "%s" % (pnum((d.num_found("crash")))))])
+        self.inf.print_info_line([
+            (46, "last new path", ptime(d.time_since("regular"))),
+            (17, " addsan", "%s" % (pnum((d.num_found("kasan")))))])
+        self.inf.print_info_line([
+            (46, "   last crash", ptime(d.time_since("crash"))),
+            (17, "timeout", "%s" % (pnum((d.num_found("timeout")))))])
+        self.inf.print_info_line([
+            (46, " last timeout", ptime(d.time_since("timeout"))),
+            (17, "regular", "%s" % (pnum((d.num_found("regular")))))])
+        self.inf.print_execution_and_map()
+        self.inf.print_info_line([
+            (29, "  total execs", pnum(d.total_execs())),
+            (34, "      edges", "%s" % (pnum((d.bitmap_used()))))])
+        self.inf.print_info_line([
+            (29, "   exec speed", str(pnum(d.execs_p_sec_avg())) + "/sec"),
+            (34, "map density", "%s" % pfloat(d.p_coll()) + "%")])
+        self.inf.print_node_and_machine()
+        for i in range(0, d.num_slaves()):
+            nid = d.slave_input_id(i)
+            if nid not in [None, 0]:
+                self.inf.print_info_line([
+                    (29, "      node id", str(d.slave_input_id(i))),
+                    (34, "   cpu used", pnum(d.cpu_used()) + "%")])
+                self.inf.print_info_line([
+                    (29, "   now trying", d.slave_stage(i)),
+                    (34, "memory used", pnum(d.ram_used()) + "%")])
+            else:
+                self.inf.print_info_line([
+                    (29, "      node id", "N/A"),
+                    (34, "   cpu used", pnum(d.cpu_used()) + "%")])
+                self.inf.print_info_line([
+                    (29, "   now trying", d.slave_stage(i)),
+                    (34, "memory used", pnum(d.ram_used()) + "%")])
+        
+        # fetch payload from shared queue
+        global PAYLOAD
+        if not PAYQ.empty():
+            PAYLOAD = PAYQ.get()
+        payload_len = len(PAYLOAD)
 
-        # payload
-        self.inf.print_test()
+        self.inf.print_payload_info()
+        self.inf.print_info_line([
+            (72, "    parent id", "%d" % (5))])
+        self.inf.print_info_line([
+            (72, "         size", pbyte(payload_len) + " bytes")])
+        self.inf.print_info_line([
+            (72, "      payload", PAYLOAD[:20])])
+        self.inf.print_bottom_line()
 
-        # self.inf.print_guest_and_overall(data)
-
-        # fflush screen
+        # refresh screen buffer
         self.inf.refresh()
+
+        # exit critical section
+        self.key.release()
 
 
 def run(stdscr):
     MonitorDrawer(stdscr)
 
 
-def main(workdir):
-    global WORKDIR, SVCNAME
+def main(workdir, payq):
+    global WORKDIR, SVCNAME, PAYQ
     
     WORKDIR = workdir
+    PAYQ = payq
     SVCNAME = 'testDriver'  # todo - receive in args
 
     # delay for files to be generated
