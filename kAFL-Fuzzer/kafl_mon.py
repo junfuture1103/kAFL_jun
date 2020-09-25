@@ -6,11 +6,12 @@ import curses
 import msgpack
 import inotify.adapters
 from threading import Thread, Lock
+
 from common.util import read_binary_file
+from kafl_fuzz import PAYQ
 
 WORKDIR = ''
 SVCNAME = ''
-PAYQ = None
 
 # current payload
 PAYLOAD = ''
@@ -393,7 +394,7 @@ class MonitorDrawer:
             try:
                 self.draw()
             finally:
-                time.sleep(0.0001)
+                time.sleep(0.00001)
 
     def watch(self, workdir):
         d = self.data
@@ -503,11 +504,10 @@ def run(stdscr):
     MonitorDrawer(stdscr)
 
 
-def main(workdir, payq):
-    global WORKDIR, SVCNAME, PAYQ
+def main(workdir):
+    global WORKDIR, SVCNAME
     
     WORKDIR = workdir
-    PAYQ = payq
     SVCNAME = 'testDriver'  # todo - receive in args
 
     # delay for files to be generated

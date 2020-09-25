@@ -28,7 +28,7 @@ from fuzzer.statistics import SlaveStatistics
 from fuzzer.technique.helper import rand
 
 from kafl_fuzz import PAYQ
-from kafl_conf import SHOW_PAYLOAD, ENABLE_TUI
+from kafl_conf import SHOW_PAYLOAD
 
 # debug
 from debug.log import *
@@ -272,8 +272,9 @@ class SlaveProcess:
                     debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
             else:
                 debug("payload: {}\t(len={})".format(show, len(show)))
-                
-            if ENABLE_TUI:
+
+            import kafl_conf
+            if kafl_conf.ENABLE_TUI:
                 PAYQ.put(show)
 
         # store crashes and any validated new behavior

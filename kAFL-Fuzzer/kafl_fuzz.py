@@ -19,7 +19,6 @@ from common.config import FuzzerConfiguration
 
 # Experimental
 from multiprocessing import Process, Queue, Pool
-from kafl_conf import ENABLE_TUI
 import time
 import curses
 import kafl_mon
@@ -43,9 +42,12 @@ def main():
     # Experimental multiprocessing
     # Here we execute fuzzer and monitor process altogether
     if enable_tui:
-        ENABLE_TUI = True
+        import kafl_conf
+        kafl_conf.SHOW_PAYLOAD = True
+        kafl_conf.ENABLE_TUI = True
+        kafl_conf.ENABLE_LOG = False    # other logging should be off!
         
-    """ procs = []
+        procs = []
         procs.append(Process(target=fuzzer.core.start, args=(cfg,)))
         procs.append(Process(target=kafl_mon.main, args=(workdir,)))
 
@@ -55,18 +57,10 @@ def main():
         for proc in procs:
             proc.join()
     else:
-        fuzzer.core.start(cfg) """
-
-    procs = []
-    procs.append(Process(target=fuzzer.core.start, args=(cfg,)))
-    procs.append(Process(target=kafl_mon.main, args=(workdir, PAYQ)))
-
-    for proc in procs:
-        proc.start()
-
-    for proc in procs:
-        proc.join()
-
+        import kafl_conf
+        kafl_conf.ENABLE_TUI = False
+        fuzzer.core.start(cfg)
+        
 
 if __name__ == "__main__":
     main()

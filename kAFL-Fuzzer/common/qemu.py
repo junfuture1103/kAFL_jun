@@ -29,7 +29,7 @@ from fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from common.util import read_binary_file, atomic_write, print_fail, strdump
 
 # debug
-# from playsound import playsound
+from debug.log import debug_error
 
 def get_valid_tap(tbase, nbase=0):
     cmd = """

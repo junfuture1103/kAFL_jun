@@ -2,7 +2,7 @@
 HAVOC_MAX_LEN = 32
 
 # Master switch for logging information
-ENABLE_LOG = False
+ENABLE_LOG = True
 
 # Flags for logging information
 SHOW_FLOW = True
@@ -11,4 +11,4 @@ SHOW_QUEUE = True
 SHOW_PAYLOAD = True
 
 # Filled by arguments - do not manually edit this!
-ENABLE_TUI = False
+ENABLE_TUI = True

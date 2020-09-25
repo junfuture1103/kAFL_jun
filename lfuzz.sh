@@ -9,5 +9,5 @@ python3 kAFL-Fuzzer/kafl_fuzz.py \
 	-seed_dir in/ \
 	-work_dir out/ \
 	-ip0 0xffffffffc02b0000-0xffffffffc02b4000 \
-	-d -tui\
+	-d -tui \
 	-v --purge 
