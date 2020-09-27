@@ -25,8 +25,11 @@ KAFL_ROOT = os.path.dirname(os.path.realpath(__file__)) + "/"
 KAFL_BANNER = KAFL_ROOT + "banner.txt"
 KAFL_CONFIG = KAFL_ROOT + "kafl.ini"
 
-# Shared queue between fuzzer and monitor
+# Shared queue and signal between fuzzer and monitor
 PAYQ = Queue()
+
+def sigint_handler(sig, frame):
+    sys.exit(0)
 
 def main():
     if not self_check(KAFL_ROOT):
@@ -36,6 +39,8 @@ def main():
     cfg = FuzzerConfiguration(KAFL_CONFIG)
     workdir = cfg.argument_values['work_dir']
     enable_tui = cfg.argument_values['tui']
+
+    signal.signal(signal.SIGINT, sigint_handler)
     
     # Experimental multiprocessing
     # Here we execute fuzzer and monitor process together

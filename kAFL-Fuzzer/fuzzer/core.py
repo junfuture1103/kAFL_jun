@@ -52,7 +52,6 @@ def graceful_exit(slaves):
 
 
 def start(config):
-
     if not post_self_check(config):
         return -1
 

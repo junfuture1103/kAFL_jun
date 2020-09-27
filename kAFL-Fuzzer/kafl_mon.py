@@ -1,3 +1,6 @@
+import os
+import sys
+import signal
 import time
 import glob
 import random
@@ -30,6 +33,9 @@ CYAN = 7
 
 BOLD = curses.A_BOLD
 DIM = curses.A_DIM
+
+def sigint_handler(sig, frame):
+    sys.exit(0)
 
 # helper function for color pairs
 def color(code):
@@ -502,7 +508,10 @@ class MonitorDrawer:
 
 
 def run(stdscr):
-    MonitorDrawer(stdscr)
+    try:
+        MonitorDrawer(stdscr)
+    except:
+        return
 
 
 def main(workdir):
@@ -510,6 +519,8 @@ def main(workdir):
     
     WORKDIR = workdir
     SVCNAME = 'testDriver'  # todo - receive in args
+
+    signal.signal(signal.SIGINT, sigint_handler)
 
     # delay for files to be generated
     time.sleep(0.5)

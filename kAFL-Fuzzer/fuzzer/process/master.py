@@ -79,7 +79,7 @@ class MasterProcess:
 
 
     def loop(self):
-        while True:
+        while True:    
             for conn, msg in self.comm.wait(self.statistics.plot_thres):
                 if msg["type"] == MSG_NODE_DONE:
                     # Slave execution done, update queue item + send new task
