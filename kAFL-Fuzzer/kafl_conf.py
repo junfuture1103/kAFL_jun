@@ -2,6 +2,7 @@
 HAVOC_MAX_LEN = 32
 
 # Master switch for logging information
+# This is automatically disabled when -tui option is set
 ENABLE_LOG = True
 
 # Flags for logging information

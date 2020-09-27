@@ -14,6 +14,8 @@ import time
 from debug.log import debug
 from kafl_conf import SHOW_QUEUE
 
+TRIM_QUEUE = True
+
 class InputQueue:
     def __init__(self, config, statistics):
         self.num_slaves = config.argument_values['p']
@@ -41,7 +43,8 @@ class InputQueue:
                 info += f"'id': {qnode.get_id()}, "
                 info += f"'state': '{qnode.get_state()}', "
                 info += f"'level': '{qnode.get_level()}', "
-                info += f"'payload': '{qnode.get_payload(qnode.get_exit_reason(), qnode.get_id())}'"
+                info += f"'payload': '{qnode.get_payload(qnode.get_exit_reason(), qnode.get_id())}', "
+                info += f"'exit_reason': '{qnode.get_exit_reason()}'"
                 info += ']\n'
                 if i == len(queue) - 1:
                     info += '\033[0m'
@@ -56,14 +59,18 @@ class InputQueue:
                 if not node.is_busy():
                     if node.get_state() != "final":
                         node.set_busy()
+                        
+                    global TRIM_QUEUE
+                    TRIM_QUEUE = True
                     return node
 
+        TRIM_QUEUE = False
         self.update_current_cycle()
 
         if retry:
             return None
         else:
-            return self.get_next(retry=True)
+            return self.get_next(retry=True)    
 
     def update_current_cycle(self):
         # Fun experimental fuzzing scheduler.
@@ -82,7 +89,11 @@ class InputQueue:
         self.num_cycles += 1
         self.current_cycle = list(self.id_to_node.values())
         self.sort_queue(self.current_cycle)
-        self.current_cycle = self.current_cycle[-cycle_size:]
+
+        # exeprimental - only trim queue when there is enough nodes
+        if TRIM_QUEUE:
+            self.current_cycle = self.current_cycle[-cycle_size:]
+
         self.statistics.event_queue_cycle(self)
 
         #for i in self.current_cycle:

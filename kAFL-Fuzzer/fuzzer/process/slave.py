@@ -266,9 +266,6 @@ class SlaveProcess:
                 else:
                     show += pay[i]
             if state:
-                if label:
-                    debug("\033[1;34m[{}] [{}]\033[0m payload: {}\t(len={})".format(state, label, show, len(show)))
-                else:
                     debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
             else:
                 debug("payload: {}\t(len={})".format(show, len(show)))
