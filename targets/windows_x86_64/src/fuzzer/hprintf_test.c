@@ -61,7 +61,7 @@ int main(int argc, char** argv){
     hprintf("Submitting current CR3 value to hypervisor...\n");
     kAFL_hypercall(HYPERCALL_KAFL_SUBMIT_CR3, 0);
 
-    while(1){
+    while (1) {
             kAFL_hypercall(HYPERCALL_KAFL_NEXT_PAYLOAD, 0);
             /* request new payload (*blocking*) */
             kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0); 

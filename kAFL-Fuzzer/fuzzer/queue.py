@@ -66,7 +66,7 @@ class InputQueue:
 
         TRIM_QUEUE = False
         self.update_current_cycle()
-
+    
         if retry:
             return None
         else:

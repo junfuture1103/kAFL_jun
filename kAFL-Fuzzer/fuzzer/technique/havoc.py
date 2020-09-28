@@ -16,6 +16,8 @@ from fuzzer.technique.havoc_handler import *
 from debug.log import debug_flow
 from kafl_conf import HAVOC_MAX_LEN
 
+SPLICE_ROUND = 2
+
 def load_dict(file_name):
     f = open(file_name)
     dict_entries = []
@@ -84,9 +86,7 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
         state = 'splice'
         
         for i in range(max_iterations):
-            stacking = rand.int(AFL_HAVOC_STACK_POW3)
-
-            for j in range(1):
+            for j in range(SPLICE_ROUND):
                 handler = rand.select(havoc_handler)
                 newdata = ''
                 while len(newdata) <= (len(data) // 2):
@@ -108,7 +108,7 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
 
 def mutate_seq_splice_array(data, func, max_iterations, resize=False, state=None):
     global location_corpus
-    splice_rounds = 8
+    splice_rounds = 16
     # files = glob.glob(location_corpus + "/*/payload_*")
     # test - splice with only regular inputs only
     files = glob.glob(location_corpus + "/regular/payload_*")   

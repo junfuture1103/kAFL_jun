@@ -200,19 +200,24 @@ class SlaveProcess:
             else:
                 return self.q.send_payload()
         except BrokenPipeError:
-            if retry > 2:
+            if retry > 3:
                 # TODO if it reliably kills qemu, perhaps log to master for harvesting..
                 log_slave("Fatal: Repeated BrokenPipeError on input: %s" % repr(data), self.slave_id)
                 raise
             else:
                 log_slave("BrokenPipeError, trying to restart qemu...", self.slave_id)
                 self.q.shutdown()
-                time.sleep(1)
+                time.sleep(2)
+                self.q.start()
+                return self.__execute(data, retry=retry+1)
+        except Exception:
+                debug_flow('Exception sending payload. Restarting QEMU...')
+                self.q.shutdown()
+                time.sleep(2)
                 self.q.start()
                 return self.__execute(data, retry=retry+1)
 
-        assert False
-
+        # assert False
 
     def __send_to_master(self, data, execution_res, info):
         info["time"] = time.time()
