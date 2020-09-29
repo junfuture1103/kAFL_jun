@@ -709,7 +709,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 						/* test */
 						if (obj->cofi.target_addr < 0x100000000) {
-							obj->cofi.target_addr |= 0xfffff80600000000;
+							obj->cofi.target_addr |= 0xfffff80300000000;
 						}
 
 						/* call pt_bitmap */
@@ -724,7 +724,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 							 * extend obj->cofi_target_addr to 64-bit address size
 							 * to pass the out of bounds test
 							 */ 
-							/* obj->cofi.target_addr |= 0xfffff80600000000; */
+							/* obj->cofi.target_addr |= 0xfffff80300000000; */
 
 							obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
 						}
@@ -812,7 +812,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 					/* test */
 					if (obj->cofi.target_addr < 0x100000000) {
-						obj->cofi.target_addr |= 0xfffff80600000000;
+						obj->cofi.target_addr |= 0xfffff80300000000;
 					}
 
 					obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);

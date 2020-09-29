@@ -34,7 +34,6 @@ res = subprocess.check_output([
     '-mem', '4096',
     '-v',
     '-work_dir', './out/'
-	'-S windows'
 ])
 idx = res.find(SVCNAME)
 if idx == -1:
