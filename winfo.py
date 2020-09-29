@@ -27,6 +27,7 @@ res = subprocess.check_output([
     '-mem', '4096',
     '-v',
     '-work_dir', './out/'
+	'-S windows'
 ])
 idx = res.find(SVCNAME)
 if idx == -1:
@@ -68,6 +69,7 @@ script += '\t-ip0 {}-{} \\\n'.format(hex(startaddr), hex(endaddr))
 script += '\t-d \\\n'
 script += '\t-v \\\n'
 script += '\t--purge'
+script += '\t-S windows'
 script += '\n'
 
 f = open('./wfuzz.sh', 'w')
