@@ -59,12 +59,8 @@ class InputQueue:
                 if not node.is_busy():
                     if node.get_state() != "final":
                         node.set_busy()
-                        
-                    global TRIM_QUEUE
-                    TRIM_QUEUE = True
                     return node
 
-        TRIM_QUEUE = True
         self.update_current_cycle()
     
         if retry:
@@ -83,7 +79,7 @@ class InputQueue:
         # TODO: Sorting the queue is relatively expensive and can turn the
         # master into a bottleneck. Experiment with cylce_factor to find a nice
         # compromise, or fix Slaves to return less often.
-        cycle_factor = 2
+        cycle_factor = 5
         cycle_size = int(cycle_factor*self.num_slaves)
 
         self.num_cycles += 1
