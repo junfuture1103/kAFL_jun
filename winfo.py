@@ -1,12 +1,19 @@
 #!/usr/bin/python3
 import sys
+import time
+import argparse
 import subprocess
+
+# initialize argument parser
+parser = argparse.ArgumentParser(description='Get Windows driver base address and patch QEMU code.')
+parser.add_argument('name', help='device or symlink name', type=str)
+args = parser.parse_args()
 
 # disassembler.c file path
 SRC = './qemu-5.0.0/pt/disassembler.c'
 
 # driver service name - should be configured before run
-SVCNAME = b'testKafl'
+SVCNAME = args.name.encode()
 
 # original driver base address
 orig = 0
@@ -36,6 +43,11 @@ res = res[:idx - 1]
 endaddr = int(res[-18:], 16)
 startaddr = int(res[-37:-19], 16)
 kbase = (endaddr & 0xFFFFFFFF00000000)
+
+# print startaddr and endaddr
+print(f'[+] startaddr: {hex(startaddr)}')
+print(f'[+] endaddr: {hex(endaddr)}')
+time.sleep(1)
 
 # patch the source code
 if orig != kbase:

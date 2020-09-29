@@ -23,10 +23,12 @@ along with QEMU-PT.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include "kafl_user.h"
 
-#define IOCTL_KAFL_INPUT    (ULONG) CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_NEITHER, FILE_ANY_ACCESS)
+//#define IOCTL_KAFL_INPUT    (ULONG) CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_KAFL_INPUT    0x9c402408
 
 int main(int argc, char** argv){
     char buf[1024];
+    char outBuffer[1024];
 
     hprintf("Starting... %s\n", argv[0]);
 
@@ -38,8 +40,8 @@ int main(int argc, char** argv){
 
     /* open vulnerable driver */
     HANDLE kafl_vuln_handle = INVALID_HANDLE_VALUE;
-    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\testKafl");
-    kafl_vuln_handle = CreateFileW(L"\\\\.\\testKafl",
+    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\ssportc");
+    kafl_vuln_handle = CreateFileW(L"\\\\.\\ssportc",
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,
@@ -83,8 +85,8 @@ int main(int argc, char** argv){
                 IOCTL_KAFL_INPUT,
                 (LPVOID)(payload_buffer->data),
                 (DWORD)payload_buffer->size,
-                NULL,
-                0,
+                (LPVOID)outBuffer,
+                (DWORD)sizeof(outBuffer),
                 NULL,
                 NULL
             );
