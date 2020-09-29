@@ -7,7 +7,12 @@ python3 kAFL-Fuzzer/kafl_fuzz.py \
 	-mem 4096 \
 	-seed_dir in/ \
 	-work_dir out/ \
+<<<<<<< HEAD
 	-ip0 0xfffff8061b060000-0xfffff8061b068000 \
+=======
+	-ip0 0xfffff80320f20000-0xfffff80320f27000 \
+>>>>>>> gnbon-develop
 	-d \
 	-v \
+	-S windows \
 	--purge

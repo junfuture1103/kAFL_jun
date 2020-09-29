@@ -83,7 +83,7 @@ class Scheduler:
 
         # boost nodes with many fav bits
         if len(node.get_fav_bits()) > 0:
-            score += 2*len(node.get_fav_bits())
+            score += 4*len(node.get_fav_bits())
 
         # TODO: only actually have to compute all this for new nodes and fav bit changes...
         node.set_score(score)

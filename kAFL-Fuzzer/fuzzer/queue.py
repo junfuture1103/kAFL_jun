@@ -64,7 +64,7 @@ class InputQueue:
                     TRIM_QUEUE = True
                     return node
 
-        TRIM_QUEUE = False
+        TRIM_QUEUE = True
         self.update_current_cycle()
     
         if retry:
@@ -88,8 +88,20 @@ class InputQueue:
 
         self.num_cycles += 1
         self.current_cycle = list(self.id_to_node.values())
-        self.sort_queue(self.current_cycle)
 
+        # Deque if node is Crashing input
+        queue_max_len = len(self.current_cycle) -1
+        i = 0
+        while i < queue_max_len:
+            debug(self.current_cycle[i].get_exit_reason())
+            if self.current_cycle[i].get_exit_reason() == 'crash':
+                del self.current_cycle[i]
+                i -= 1
+                queue_max_len -= 1
+            i += 1
+        
+        self.sort_queue(self.current_cycle)
+        
         # exeprimental - only trim queue when there is enough nodes
         if TRIM_QUEUE:
             self.current_cycle = self.current_cycle[-cycle_size:]
