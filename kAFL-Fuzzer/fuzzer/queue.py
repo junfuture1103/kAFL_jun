@@ -64,7 +64,7 @@ class InputQueue:
                     TRIM_QUEUE = True
                     return node
 
-        TRIM_QUEUE = False
+        TRIM_QUEUE = True
         self.update_current_cycle()
     
         if retry:
@@ -88,42 +88,23 @@ class InputQueue:
 
         self.num_cycles += 1
         self.current_cycle = list(self.id_to_node.values())
-        
-        # Experiment
-        tmp_queue = self.current_cycle
-        for element in tmp_queue:
-                if element.get_exit_reason() == 'crash':
-                    del element
-        self.current_cycle = tmp_queue
 
-        self.sort_queue(self.current_cycle)
+        # Deque if node is Crashing input
+        queue_max_len = len(self.current_cycle) -1
+        i = 0
+        while i < queue_max_len:
+            debug(self.current_cycle[i].get_exit_reason())
+            if self.current_cycle[i].get_exit_reason() == 'crash':
+                del self.current_cycle[i]
+                i -= 1
+                queue_max_len -= 1
+            i += 1
         
-        # debug
-        msg = 'self.current_cycle(NOT TRIMMED): [\n'
-        queue = self.current_cycle
-        for i in range(len(queue)):
-            qnode = queue[i]
-            info = '        '
-            if i == len(queue) - 1:
-                info += '\033[1;36m'
-            info += '    ['
-            info += f"'id': {qnode.get_id()}, "
-            info += f"'state': '{qnode.get_state()}', "
-            info += f"'level': '{qnode.get_level()}', "
-            info += f"'payload': '{qnode.get_payload(qnode.get_exit_reason(), qnode.get_id())}', "
-            info += f"'exit_reason': '{qnode.get_exit_reason()}'"
-            info += ']\n'
-            if i == len(queue) - 1:
-                info += '\033[0m'
-            msg += info
-        msg += '        ]'
-        debug(msg)
+        self.sort_queue(self.current_cycle)
         
         # exeprimental - only trim queue when there is enough nodes
         if TRIM_QUEUE:
             self.current_cycle = self.current_cycle[-cycle_size:]
-        else:
-            self.current_cycle = self.current_cycle[-5:]
 
         self.statistics.event_queue_cycle(self)
 
