@@ -16,6 +16,7 @@ from fuzzer.technique.havoc_handler import *
 from debug.log import debug_flow
 from kafl_conf import HAVOC_MAX_LEN
 
+# use this value to nerf accuracy of splicing
 SPLICE_ROUND = 2
 
 def load_dict(file_name):
@@ -86,9 +87,9 @@ def mutate_seq_havoc_array(data, func, max_iterations, resize=False, state=None,
         state = 'splice'
         
         for i in range(max_iterations):
+            newdata = ''
             for j in range(SPLICE_ROUND):
                 handler = rand.select(havoc_handler)
-                newdata = ''
                 while len(newdata) <= (len(data) // 2):
                     newdata = handler(data)
                 
