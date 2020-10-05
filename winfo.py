@@ -47,7 +47,7 @@ kbase = (endaddr & 0xFFFFFFFF00000000)
 # print startaddr and endaddr
 print(f'[+] startaddr: {hex(startaddr)}')
 print(f'[+] endaddr: {hex(endaddr)}')
-time.sleep(1)
+time.sleep(2)
 
 # patch the source code
 if orig != kbase:
@@ -80,7 +80,6 @@ script += '\t-ip0 {}-{} \\\n'.format(hex(startaddr), hex(endaddr))
 script += '\t-d \\\n'
 script += '\t-v \\\n'
 script += '\t--purge'
-script += '\t-S windows'
 script += '\n'
 
 f = open('./wfuzz.sh', 'w')
