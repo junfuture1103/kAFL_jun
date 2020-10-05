@@ -81,21 +81,22 @@ class InputQueue:
         # TODO: Sorting the queue is relatively expensive and can turn the
         # master into a bottleneck. Experiment with cylce_factor to find a nice
         # compromise, or fix Slaves to return less often.
-        cycle_factor = 4
+        cycle_factor = 1
         cycle_size = int(cycle_factor*self.num_slaves)
 
         self.num_cycles += 1
         self.current_cycle = list(self.id_to_node.values())
 
         # Deque if node is Crashing input
-        queue_max_len = len(self.current_cycle) -1
+        queue_max_len = len(self.current_cycle)  
         i = 0
         while i < queue_max_len:
             if self.current_cycle[i].get_exit_reason() == 'crash':
-                del self.current_cycle[i]
+                self.current_cycle.pop(i)
+                i -= 1
                 queue_max_len -= 1
             i += 1
-
+    
         self.sort_queue(self.current_cycle)        
         self.current_cycle = self.current_cycle[-cycle_size:]
 
