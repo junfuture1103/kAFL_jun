@@ -160,7 +160,8 @@ class qemu:
         # Lauch either as VM snapshot, direct kernel/initrd boot, or -bios boot
         if self.config.argument_values['vm_dir']:
             assert(self.config.argument_values['vm_ram'])
-            self.cmd += " -hdb " + self.config.argument_values['vm_ram']
+            # Edited argument vm_ram's parsing target from file to directory, for parallel fuzzing
+            self.cmd += " -hdb " + self.config.argument_values['vm_ram'] + "/ram_" + self.qemu_id + ".qcow2"
             self.cmd += " -hda " + self.config.argument_values['vm_dir'] + "/overlay_" + self.qemu_id + ".qcow2"
             self.cmd += " -loadvm " + self.config.argument_values["S"]
         elif self.config.argument_values['kernel']:

@@ -137,9 +137,10 @@ def add_args_qemu(parser):
     xorarg = parser.add_mutually_exclusive_group(required=True)
 
     xorarg.add_argument('-vm_dir', metavar='<dir>', required=False, action=FullPath,
-                        type=parse_is_dir, help='path to a VM\'s overlay directory. Also needs -vm_ram')
-    parser.add_argument('-vm_ram', metavar='<file>', required=False, action=FullPath, type=parse_is_file,
-                        help='path to a VM\'s RAM snapshot file. Use together with -vm_dir.')
+                        type=parse_is_dir, help='path to a VM\'s overlay directory (filename: overlay_0.qcow2, overlay_1.qcow2 ..).')
+    # Edited argument vm_ram's parsing target from file to directory, for parallel fuzzing
+    parser.add_argument('-vm_ram', metavar='<dir>', required=False, action=FullPath, type=parse_is_dir,
+                        help='path to a VM\'s RAM snapshot directory (filename: ram_0.qcow2, ram_1.qcow2 ..).')
     parser.add_argument('-S', required=False, metavar='<name>', help='name of VM snapshot to save/load (default: kafl).',
                         default="kafl", type=str)
 
