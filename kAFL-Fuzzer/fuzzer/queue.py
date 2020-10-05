@@ -43,6 +43,8 @@ class InputQueue:
                 info += f"'id': {qnode.get_id()}, "
                 info += f"'state': '{qnode.get_state()}', "
                 info += f"'level': '{qnode.get_level()}', "
+                info += f"'favs': '{len(qnode.get_fav_bits())}', "
+                info += f"'score': '{qnode.get_score()}', "
                 info += f"'payload': '{qnode.get_payload(qnode.get_exit_reason(), qnode.get_id())}', "
                 info += f"'exit_reason': '{qnode.get_exit_reason()}'"
                 info += ']\n'
@@ -79,7 +81,7 @@ class InputQueue:
         # TODO: Sorting the queue is relatively expensive and can turn the
         # master into a bottleneck. Experiment with cylce_factor to find a nice
         # compromise, or fix Slaves to return less often.
-        cycle_factor = 5
+        cycle_factor = 4
         cycle_size = int(cycle_factor*self.num_slaves)
 
         self.num_cycles += 1
@@ -89,18 +91,13 @@ class InputQueue:
         queue_max_len = len(self.current_cycle) -1
         i = 0
         while i < queue_max_len:
-            debug(self.current_cycle[i].get_exit_reason())
             if self.current_cycle[i].get_exit_reason() == 'crash':
                 del self.current_cycle[i]
-                i -= 1
                 queue_max_len -= 1
             i += 1
-        
-        self.sort_queue(self.current_cycle)
-        
-        # exeprimental - only trim queue when there is enough nodes
-        if TRIM_QUEUE:
-            self.current_cycle = self.current_cycle[-cycle_size:]
+
+        self.sort_queue(self.current_cycle)        
+        self.current_cycle = self.current_cycle[-cycle_size:]
 
         self.statistics.event_queue_cycle(self)
 
