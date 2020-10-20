@@ -27,13 +27,16 @@ class GlobalBitmap:
         self.name = name
         self.config = config
         self.bitmap_size = bitmap_size
-        self.create_bitmap(name)
-        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.bitmap)
+        self.create_bitmap(name)    # creates self.bitmap (mmapped memory)
+        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.bitmap)    # ctybes instance for managing bitmap
         self.read_only = read_only
         if not read_only:
             self.flush_bitmap()
 
     def flush_bitmap(self):
+        """
+        Zeroes out all the content of self.bitmap
+        """
         assert (not self.read_only)
         for i in range(self.bitmap_size):
             self.c_bitmap[i] = 0
@@ -113,6 +116,18 @@ class GlobalBitmap:
 
 
 class BitmapStorage:
+    """
+    BitmapStorage stores 4 GlobalBitmap instances
+    (normal, crash, kasan, timeout)
+
+    Members:
+        prefix -- directory name of bitmap files
+        bitmap_size -- size of the bitmap (default 64K)
+        normal_bitmap -- GlobalBitmap instance for regular corpus
+        crash_bitmap -- GlobalBitmap instance for crashing corpus
+        kasan_bitmap -- not usable
+        timeout_bitmap -- not usable
+    """
     def __init__(self, config, bitmap_size, prefix, read_only=True):
         self.prefix = prefix
         self.bitmap_size = bitmap_size

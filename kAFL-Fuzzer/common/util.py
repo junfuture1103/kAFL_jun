@@ -50,6 +50,12 @@ def atomic_write(filename, data):
     os.rename(f.name, filename)
 
 def read_binary_file(filename):
+    """
+    Read binary data from a file.
+
+    Arguments:
+        filename -- filename (path)
+    """
     with open(filename, 'rb') as f:
         return f.read()
 

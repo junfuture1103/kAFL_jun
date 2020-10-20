@@ -52,6 +52,14 @@ def debug_except(msg):
         print(data)
 
 def debug(msg, newline=False):
+    """
+    Debug function added in hack-rabbit/kAFL.
+    Emits debug message to stdout with some prefix.
+
+    Arguments:
+        msg -- debug message
+        newline -- prints CRLF first when enabled (optional)
+    """
     if newline:
         data = '\n' + YELLOW_PREFIX + msg
     else:

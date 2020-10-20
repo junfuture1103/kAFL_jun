@@ -280,6 +280,12 @@ class qemu:
         self.__debug_recv_expect(qemu_protocol.REDQUEEN_SET_BLACKLIST)
 
     def __debug_send(self, cmd):
+        """
+        Sends signal (defined with custom protocol) to guest.
+
+        Arguments:
+            cmd -- the signal
+        """
         #self.last_bitmap_wrapper.invalidate() # works on a copy, probably obsolete..
         if self.debug_mode:
                 info = ""
@@ -335,6 +341,9 @@ class qemu:
                 raise e
 
     def __debug_recv(self):
+        """
+        Receive 1 byte of signal from the socket.
+        """
         while True:
             try:
                 res = self.control.recv(1)
@@ -576,17 +585,17 @@ class qemu:
                 if self.process.returncode is not None:
                     raise
 
-        self.kafl_shm_f     = os.open(self.bitmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
-        self.fs_shm_f       = os.open(self.payload_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
+        self.kafl_shm_f = os.open(self.bitmap_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
+        self.fs_shm_f = os.open(self.payload_filename, os.O_RDWR | os.O_SYNC | os.O_CREAT)
 
         open(self.tracedump_filename, "wb").close()
 
         os.ftruncate(self.kafl_shm_f, self.bitmap_size)
         os.ftruncate(self.fs_shm_f, (128 << 10))
 
-        self.kafl_shm = mmap.mmap(self.kafl_shm_f, self.bitmap_size, mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ)
-        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.kafl_shm)
-        self.fs_shm = mmap.mmap(self.fs_shm_f, (128 << 10), mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ)
+        self.kafl_shm = mmap.mmap(self.kafl_shm_f, self.bitmap_size, mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ) # shared memory to write bitmap
+        self.c_bitmap = (ctypes.c_uint8 * self.bitmap_size).from_buffer(self.kafl_shm)  # ctypes instance to share and manage bitmap
+        self.fs_shm = mmap.mmap(self.fs_shm_f, (128 << 10), mmap.MAP_SHARED, mmap.PROT_WRITE | mmap.PROT_READ)  # shared memory to write payload
 
         return True
 
@@ -620,6 +629,10 @@ class qemu:
     # TODO: can directly return result for handling by caller?
     # TODO: document protocol and meaning/effect of each message
     def check_recv(self, timeout_detection=True):
+        """
+        Receive 1 byte from the socket
+        and check if result was regular, crash, kasan, etc.
+        """
         if timeout_detection:
             #debugging_code
             #ready = select.select([self.control], [], [], 0.25)
@@ -678,6 +691,10 @@ class qemu:
         return result
 
     def send_payload(self, apply_patches=True, timeout_detection=True, max_iterations=10):
+        """
+        Wait for guest result and triage it
+        to create and return new ExecutionResult instance.
+        """
         log_qemu("Send payload..", self.qemu_id)
 
         if self.exiting:
@@ -699,24 +716,24 @@ class qemu:
 
         repeat = False
         value = self.check_recv(timeout_detection=timeout_detection)
-        if value == 0:
-            pass # all good
-        elif value == 1:
+        if value == 0:      # KAFL_ACQUIRE
+            pass
+        elif value == 1:    # crash
             log_qemu("Crash detected!", self.qemu_id)
             self.crashed = True
-        elif value == 2:
+        elif value == 2:    # timeout
             log_qemu("Timeout detected!", self.qemu_id)
             self.timeout = True
-        elif value == 3:
+        elif value == 3:    # kasan
             log_qemu("Kasan detected!", self.qemu_id)
             self.kasan = True
-        elif value == 4:
+        elif value == 4:    # trashed
             repeat = True
         elif value == 5:
-            repeat = True
+            repeat = True   # trashed crash
             self.soft_reload()
         elif value == 6:
-            repeat = True
+            repeat = True   # trashed kasan
             self.soft_reload()
         elif value == 7:
             log_qemu("Timeout detected!", self.qemu_id)
@@ -741,6 +758,10 @@ class qemu:
         return ExecutionResult(self.c_bitmap, self.bitmap_size, self.exit_reason(), time.time() - start_time)
 
     def exit_reason(self):
+        """
+        Returns if the corpus was a regular one,
+        or invoked crash, kasan, timeout, etc.
+        """
         if self.crashed:
             return "crash"
         elif self.timeout:

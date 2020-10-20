@@ -10,7 +10,16 @@ from fuzzer.bitmap import GlobalBitmap
 
 
 class ExecutionResult:
+    """
+    Result of the each corpus.
+    Created per execution.
 
+    Members:
+        cbuffer -- ctypes instance managing bitmap
+        bitmap_size -- size of the bitmap
+        exit_reason -- result of the recent corpus
+        performance -- time consumed
+    """
     @staticmethod
     def bitmap_from_bytearray(bitmap, exitreason, performance):
         bitmap_size = len(bitmap)

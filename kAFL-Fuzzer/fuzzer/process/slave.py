@@ -80,10 +80,21 @@ class SlaveProcess:
         self.bitmap_storage = BitmapStorage(self.config, self.config.config_values['BITMAP_SHM_SIZE'], "master")
 
     def handle_import(self, msg):
+        """
+        Handle import stage.
+        Create metadata and process new node.
+
+        Arguments:
+            msg -- node object (dict)
+
+        Notes:
+            Note that this function is different from handle_xxxx
+            at state_logic.py
+        """
         meta_data = {"state": {"name": "import"}, "id": 0}
         payload = msg["task"]["payload"]
         self.logic.process_node(payload, meta_data)
-        self.conn.send_ready()
+        self.conn.send_ready()  # inital slave hello
 
     def handle_busy(self):
         busy_timeout = 1
@@ -134,8 +145,8 @@ class SlaveProcess:
 
         log_slave("Started qemu", self.slave_id)
         while True:
-            try:
-                msg = self.conn.recv()
+            try:    
+                msg = self.conn.recv()  # sent from master via socket
             except ConnectionResetError:
                 log_slave("Lost connection to master. Shutting down.", self.slave_id)
                 return
@@ -192,7 +203,13 @@ class SlaveProcess:
         return self.q.execute_in_redqueen_mode(data)
 
     def __execute(self, data, retry=0):
-
+        """
+        Send payload to guest 
+        and return ExecutionResult instance from the result.
+        
+        Arguments:
+            data -- payload
+        """
         try:
             self.q.set_payload(data)
             if False:  # activate detailed comparison of execution traces?
@@ -247,16 +264,7 @@ class SlaveProcess:
     def execute(self, data, info, state=None, label=None):
         self.statistics.event_exec()
 
-        exec_res = self.__execute(data)     # returns ExecutionResult
-
-        # debug
-        """ msg = f'''exec_res = [
-            'bitmap_size': {exec_res.bitmap_size},
-            'exit_reason': {exec_res.exit_reason},
-            'performance': {exec_res.performance}
-        ]
-        '''
-        debug(msg) """
+        exec_res = self.__execute(data)     # ExecutionResult instance
 
         is_new_input = self.bitmap_storage.should_send_to_master(exec_res)
         crash, timeout, kasan = self.execution_exited_abnormally()
@@ -300,9 +308,6 @@ class SlaveProcess:
                     debug("\033[1;31m[crash]\033[0m Crash detected!")
                     time.sleep(1.5)
 
-                # debug
-                # debug("Before call to __send_to_master()!")
-                # time.sleep(1)
                 self.__send_to_master(data, exec_res, info)
 
         else:

@@ -78,6 +78,10 @@ class ClientConnection:
         return msgpack.unpackb(data, raw=False, strict_map_key=False)
 
     def send_ready(self):
+        """
+        Sends MSG_READY message to master.
+        (initial slave hello)
+        """
         self.sock.send_bytes(msgpack.packb({"type": MSG_READY, "client_id": self.id}, use_bin_type=True))
 
     def send_new_input(self, data, bitmap, info):

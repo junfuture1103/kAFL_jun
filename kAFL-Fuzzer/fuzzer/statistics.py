@@ -144,6 +144,10 @@ class MasterStatistics:
 
 
 class SlaveStatistics:
+    """
+    SlaveStatistics manages statistic information.
+    Created per slave process.
+    """
     def __init__(self, slave_id, config):
         self.config = config
         self.filename = self.config.argument_values['work_dir'] + "/slave_stats_%d" % (slave_id)

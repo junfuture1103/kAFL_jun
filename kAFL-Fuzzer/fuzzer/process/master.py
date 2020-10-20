@@ -81,6 +81,7 @@ class MasterProcess:
     def loop(self):
         while True:    
             for conn, msg in self.comm.wait(self.statistics.plot_thres):
+                # Wait for messages sent by slave
                 if msg["type"] == MSG_NODE_DONE:
                     # Slave execution done, update queue item + send new task
                     log_master("Received results, sending next task..")

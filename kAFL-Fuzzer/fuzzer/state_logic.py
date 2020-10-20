@@ -31,6 +31,10 @@ from debug.log import debug
 from kafl_conf import SHOW_STATE, ENABLE_TUI
 
 class FuzzingStateLogic:
+    """
+    FuzzingStateLogic manages a finite state machine of
+    corpus nodes.
+    """
     HAVOC_MULTIPLIER = 2
     RADAMSA_DIV = 25
     """ RADAMSA_DIV = 20 """
@@ -87,6 +91,14 @@ class FuzzingStateLogic:
         return ret
 
     def process_node(self, payload, metadata):
+        """
+        Given a payload with node metadata,
+        go through a designated sequence and update states.
+
+        Arguments:
+            payload -- corpus
+            metadata -- metadata for nodes (stage, id, etc.)
+        """
         self.init_stage_info(metadata)
 
         # debug
@@ -121,6 +133,13 @@ class FuzzingStateLogic:
             raise ValueError("Unknown task stage %s" % metadata["state"]["name"])
 
     def init_stage_info(self, metadata, verbose=False):
+        """
+        Fill metadata with initial values.
+        Called at the very beginning of process_node method.
+
+        Arguments:
+            metadata -- almost empty metadata (dict)
+        """
         stage = metadata["state"]["name"]
         nid = metadata["id"]
 
@@ -168,7 +187,9 @@ class FuzzingStateLogic:
         return info
 
     def handle_import(self, payload, metadata, retry=0):
-        # debug
+        """
+        Execute target routine with imported seed.
+        """
         state = metadata['state']['name']
 
         _, is_new = self.execute(payload, label="import", state=state)
@@ -182,9 +203,9 @@ class FuzzingStateLogic:
         # TODO: We also seem to have some corner case where PT feedback does not
         # work and the seed has to be provided multiple times to actually
         # (eventually) be recognized correctly..
-        """ if not is_new:
+        if not is_new:
             print("Imported payload produced no new coverage, skipping..")
-            log_slave("`Imported payload produced no new coverage, skipping..", self.slave.slave_id) """
+            log_slave("`Imported payload produced no new coverage, skipping..", self.slave.slave_id)
 
 
     def handle_initial(self, payload, metadata):
@@ -340,7 +361,12 @@ class FuzzingStateLogic:
 
 
     def execute(self, payload, label=None, extra_info=None, state=None):
+        """
+        Make slave execute target routine with given payload.
 
+        Arguments:
+            payload -- payload to send
+        """
         self.stage_info_execs += 1
         if label and label != self.stage_info["method"]:
             self.stage_update_label(label)
