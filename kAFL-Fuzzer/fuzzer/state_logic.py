@@ -172,9 +172,9 @@ class FuzzingStateLogic:
         state = metadata['state']['name']
 
         _, is_new = self.execute(payload, label="import", state=state)
-        _, is_new = self.execute(payload, label="import", state=state)
-        _, is_new = self.execute(payload, label="import", state=state)
-        _, is_new = self.execute(payload, label="import", state=state)
+        # _, is_new = self.execute(payload, label="import", state=state)
+        # _, is_new = self.execute(payload, label="import", state=state)
+        # _, is_new = self.execute(payload, label="import", state=state)
 
         # Inform user if seed yields no new coverage. This may happen if -ip0 is
         # wrong or the harness is buggy.
@@ -338,10 +338,56 @@ class FuzzingStateLogic:
         parent_info = self.get_parent_info(extra_info)
         return self.slave.validate_bytes(payload, metadata, parent_info)
 
+    def filter(self, payload):
+        code_constraints = [ 
+            {'ioctl_code':0xa3350404, 'inputBufferLength':0x10, 'static':True},
+            {'ioctl_code':0xa3350408, 'inputBufferLength':0x10, 'static':True},
+            {'ioctl_code':0xa335040c, 'inputBufferLength':0x20, 'static':False}, # None
+            {'ioctl_code':0xa3350410, 'inputBufferLength':0x0, 'static':True},
+            {'ioctl_code':0xa3350424, 'inputBufferLength':0x10, 'static':False},
+            {'ioctl_code':0xa335041c, 'inputBufferLength':0x10, 'static':False},
+            {'ioctl_code':0xa3350414, 'inputBufferLength':0x20, 'static':False}, 
+            {'ioctl_code':0xa335044c, 'inputBufferLength':0x4, 'static':True},
+            {'ioctl_code':0xa3350418, 'inputBufferLength':0x0, 'static':True},
+            {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True}
+        ]
+        
+        payload = payload.decode('iso-8859-9')
+        payload_readable = ''
+        for i in range(len(payload)):
+            if ord(payload[i]) < 0x20 or ord(payload[i]) >= 0x80:
+                payload_readable += '.'
+            else:
+                payload_readable += payload[i]
+        debug("payload: " + payload_readable)
+
+        for i in range(len(payload)):
+            try:
+                pIndex = int(payload[i])
+            except:
+                return False
+            if pIndex < len(code_constraints):
+                print("ioctl_code: ", hex(code_constraints[pIndex]['ioctl_code']))
+                i += code_constraints[pIndex]['inputBufferLength'] + 1
+                if i < len(payload):
+                    continue
+                
+                if i == len(payload):
+                    return True
+                elif code_constraints[pIndex]['static'] == False:
+                    return True
+                else:
+                    return False
+            return False
 
     def execute(self, payload, label=None, extra_info=None, state=None):
-
         self.stage_info_execs += 1
+        
+        if (state != "import"): # and state != "initial" and state != "calibrate"):
+            filtering_res = self.filter(payload)
+            if filtering_res != True:
+                return
+        
         if label and label != self.stage_info["method"]:
             self.stage_update_label(label)
 

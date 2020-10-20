@@ -87,22 +87,23 @@ UINT64 resolve_KeBugCheck(PCSTR kfunc){
 /* -------------- */
 
 static inline void run_program(void* target){
-    PROCESS_INFORMATION p1;
-    STARTUPINFOA s1;
+    // PROCESS_INFORMATION p1;
+    // STARTUPINFOA s1;
+    SHELLEXECUTEINFOA e1 = { sizeof(SHELLEXECUTEINFOA) };
+    e1.lpVerb = "runas";  
+    e1.lpFile = target;
+    e1.nShow = SW_SHOWNORMAL;
 
-        ZeroMemory(&p1, sizeof(p1));
-        ZeroMemory(&s1, sizeof(s1));
-        s1.cb = sizeof(s1);
-
-        printf("[+] LOADER: Starting fuzzing target\n");
-        BOOL success = CreateProcessA(NULL, target, NULL, NULL, FALSE,
-            0, NULL, NULL, &s1, &p1);
-        if (!success){
-            printf("[-] LOADER: cannot start fuzzing target\n");
-            getchar();
-            ExitProcess(0);
-        }
-        TerminateProcess((HANDLE)-1,0x41);
+    printf("[+] LOADER: Starting fuzzing target\n");
+    // BOOL success = CreateProcessA(NULL, target, NULL, NULL, FALSE,
+    //    0, NULL, NULL, &s1, &p1);
+    BOOL success = ShellExecuteExA(&e1);
+    if (!success){
+        printf("[-] LOADER: cannot start fuzzing target\n");
+        getchar();
+        ExitProcess(0);
+    }
+    TerminateProcess((HANDLE)-1,0x41);
 }
 
 static inline void load_program(void* buf){
