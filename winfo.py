@@ -29,7 +29,7 @@ with open(SRC, 'r') as f:
 res = subprocess.check_output([
     './kAFL-Fuzzer/kafl_info.py',
     '-vm_dir', './snapshot_win/',
-    '-vm_ram', './snapshot_win/wram.qcow2',
+    '-vm_ram', './snapshot_win/'
     '-agent', './targets/windows_x86_64/bin/info/info.exe',
     '-mem', '4096',
     '-v',
@@ -70,7 +70,7 @@ if orig != kbase:
 script = '#!/bin/sh\n'
 script += 'cd ~/kAFL/\n'
 script += 'python3 kAFL-Fuzzer/kafl_fuzz.py \\\n'
-script += '\t-vm_ram snapshot_win/wram.qcow2 \\\n'
+script += '\t-vm_ram snapshot_win/ \\\n'
 script += '\t-vm_dir snapshot_win/ \\\n'
 script += '\t-agent targets/windows_x86_64/bin/fuzzer/hprintf_test.exe \\\n'
 script += '\t-mem 4096 \\\n'
