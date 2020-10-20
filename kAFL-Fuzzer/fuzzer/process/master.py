@@ -30,14 +30,21 @@ from kafl_conf import SHOW_FLOW
 import time
 
 class MasterProcess:
+    """
+    MasterProcess mainly manages queue of inputs and schedules it by certain criteria.
+    It sends selected payload to slave process and receives result signal.
 
+    Members:
+        comm -- communication interface with slave socket
+        queue -- queue of input nodes
+        bitmap_storage -- collection of bitmaps for each result (normal, crash, kasan, timeout)
+    """
     def __init__(self, config):
         self.config = config
         self.comm = ServerConnection(self.config)
 
         self.busy_events = 0
         self.empty_hash = mmh3.hash(("\x00" * self.config.config_values['BITMAP_SHM_SIZE']))
-
 
         self.statistics = MasterStatistics(self.config)
         self.queue = InputQueue(self.config, self.statistics)
@@ -102,6 +109,7 @@ class MasterProcess:
                         self.queue.update_node_results(msg["node_id"], msg["results"], msg["new_payload"])
                     self.send_next_task(conn)
                 elif msg["type"] == MSG_NEW_INPUT:
+                    # Slave sends new input to 
                     log_master("Received new input: {}".format(repr(msg["input"]["payload"])))
                     node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)

@@ -155,6 +155,10 @@ class BitmapStorage:
             assert False, "unexpected node type: {}".format(exit_reason)
 
     def check_storage_logic(self, exec_result, new_bytes, new_bits):
+        """
+        Return true when the recent result of execution
+        was interesting.
+        """
         if exec_result.exit_reason == "regular" and (new_bits or new_bytes):
             return True
         elif new_bytes:
@@ -163,7 +167,7 @@ class BitmapStorage:
 
     def should_send_to_master(self, exec_result):
         """
-        should_send_to_master
+        Check if the recent result of execution was interesting.
 
         Arguments:
             exec_result -- result of the recent payload (ExecutionResult instance)
