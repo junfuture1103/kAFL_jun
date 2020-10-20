@@ -51,6 +51,13 @@ class MasterProcess:
                 pformat(config.argument_values, indent=4, compact=True))
 
     def send_next_task(self, conn):
+        """
+        Pick a next node from the queue
+        and send to the slave process.
+
+        Arguments:
+            conn -- Listener instance (bound socket)
+        """
         # Inputs placed to imports/ folder have priority.
         # This can also be used to inject additional seeds at runtime.
         imports = glob.glob(self.config.argument_values['work_dir'] + "/imports/*")
@@ -60,8 +67,8 @@ class MasterProcess:
             seed = read_binary_file(path)
             os.remove(path)
             return self.comm.send_import(conn, {"type": "import", "payload": seed})
-        # Process items from queue..
-
+        
+        # pop a eligible node from the queue
         node = self.queue.get_next()
 
         if node:
@@ -81,9 +88,15 @@ class MasterProcess:
     def loop(self):
         while True:    
             for conn, msg in self.comm.wait(self.statistics.plot_thres):
-                # Wait for messages sent by slave
+                """
+                Wait for messages sent by slave.
+                conn -- Listener instance (bound socket)
+
+                When starting fuzzer for the first time,
+                master process initially receives MSG_READY from the slave.
+                """
                 if msg["type"] == MSG_NODE_DONE:
-                    # Slave execution done, update queue item + send new task
+                    # Slave execution done. update queue item and send new task
                     log_master("Received results, sending next task..")
                     if msg["node_id"]:
                         self.queue.update_node_results(msg["node_id"], msg["results"], msg["new_payload"])
@@ -93,8 +106,7 @@ class MasterProcess:
                     node_struct = {"info": msg["input"]["info"], "state": {"name": "initial"}}
                     self.maybe_insert_node(msg["input"]["payload"], msg["input"]["bitmap"], node_struct)
                 elif msg["type"] == MSG_READY:
-                    # Initial slave hello, send first task...
-                    # log_master("Slave is ready..")
+                    # Initial slave hello, send first task.
                     self.send_next_task(conn)
                 else:
                     raise ValueError("unknown message type {}".format(msg))

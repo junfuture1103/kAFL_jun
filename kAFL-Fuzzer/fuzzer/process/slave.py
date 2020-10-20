@@ -34,7 +34,12 @@ from kafl_conf import SHOW_PAYLOAD
 from debug.log import *
 
 def slave_loader(slave_id):
-
+    """
+    Creates slave process and start slave loop.
+    
+    Arguments:
+        slave_id -- slave id
+    """
     def sigterm_handler(signal, frame):
         slave_process.q.async_exit()
         sys.exit(0)
@@ -49,6 +54,10 @@ def slave_loader(slave_id):
     #else:
     #    psutil.Process().cpu_affinity([slave_id])
 
+    """
+    When initializing ClientConnection instance,
+    slave process sends MSG_READY (slave hello) first to master.
+    """
     connection = ClientConnection(slave_id, config)
 
     slave_process = SlaveProcess(slave_id, config, connection)
@@ -94,7 +103,7 @@ class SlaveProcess:
         meta_data = {"state": {"name": "import"}, "id": 0}
         payload = msg["task"]["payload"]
         self.logic.process_node(payload, meta_data)
-        self.conn.send_ready()  # inital slave hello
+        self.conn.send_ready()
 
     def handle_busy(self):
         busy_timeout = 1
@@ -145,6 +154,10 @@ class SlaveProcess:
 
         log_slave("Started qemu", self.slave_id)
         while True:
+            """
+            When starting fuzzer for the first time,
+            slave process receives MSG_IMPORT after sending MSG_READY.
+            """
             try:    
                 msg = self.conn.recv()  # sent from master via socket
             except ConnectionResetError:

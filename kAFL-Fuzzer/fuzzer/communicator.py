@@ -54,15 +54,37 @@ class ServerConnection:
         return results
 
     def send_import(self, client, task_data):
+        """
+        Sends imported seed to the slave process.
+
+        Arguments:
+            client -- Listener instance (bound socket)
+            task_data -- node information (dict)
+        """
         client.send_bytes(msgpack.packb({"type": MSG_IMPORT, "task": task_data}, use_bin_type=True))
 
     def send_node(self, client, task_data):
+        """
+        Sends node selected by the scheduler to the slave process.
+
+        Arguments:
+            client -- Listener instance (bound socket)
+            task_data -- node information (dict)
+        """
         client.send_bytes(msgpack.packb({"type": MSG_RUN_NODE, "task": task_data}, use_bin_type=True))
 
     def send_busy(self, client):
         client.send_bytes(msgpack.packb({"type": MSG_BUSY}, use_bin_type=True))
 
 class ClientConnection:
+    """
+    ClientConnection manages socket on the slave side.
+    It is used to communicate with master process.
+
+    Notes:
+        On creating ClientConnection, slave process sends
+        MSG_READY message first to the master process.
+    """
     def __init__(self, id, config):
         self.id = id
         self.address = config.argument_values["work_dir"] + "/slave_socket"
@@ -80,7 +102,6 @@ class ClientConnection:
     def send_ready(self):
         """
         Sends MSG_READY message to master.
-        (initial slave hello)
         """
         self.sock.send_bytes(msgpack.packb({"type": MSG_READY, "client_id": self.id}, use_bin_type=True))
 

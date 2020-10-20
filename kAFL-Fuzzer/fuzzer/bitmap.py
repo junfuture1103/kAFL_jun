@@ -137,6 +137,12 @@ class BitmapStorage:
         self.timeout_bitmap = GlobalBitmap(prefix + "_timeout_bitmap", config, self.bitmap_size, read_only)
 
     def get_bitmap_for_node_type(self, exit_reason):
+        """
+        Return relevant GlobalBitmap instance.
+
+        Arguments:
+            exit_reason -- execution result (regular, timeout, crash, kasan)
+        """
         if exit_reason == "regular":
             return self.normal_bitmap
         elif exit_reason == "timeout":
@@ -156,6 +162,12 @@ class BitmapStorage:
         return False
 
     def should_send_to_master(self, exec_result):
+        """
+        should_send_to_master
+
+        Arguments:
+            exec_result -- result of the recent payload (ExecutionResult instance)
+        """
         # debug
         exit_reason = ''
         if exec_result.exit_reason == 'crash':

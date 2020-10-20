@@ -52,11 +52,17 @@ def graceful_exit(slaves):
 
 
 def start(config):
+    """
+    Create master and slave process and start fuzzing.
+
+    Arguments:
+        config -- FuzzConfiguration instance with launch options
+    """
     if not post_self_check(config):
         return -1
 
-    work_dir   = config.argument_values["work_dir"]
-    seed_dir   = config.argument_values["seed_dir"]
+    work_dir = config.argument_values["work_dir"]
+    seed_dir = config.argument_values["seed_dir"]
     num_slaves = config.argument_values['p']
 
     if config.argument_values['v']:

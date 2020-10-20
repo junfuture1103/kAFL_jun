@@ -204,7 +204,7 @@ class FuzzingStateLogic:
         # work and the seed has to be provided multiple times to actually
         # (eventually) be recognized correctly..
         if not is_new:
-            print("Imported payload produced no new coverage, skipping..")
+            # print("Imported payload produced no new coverage, skipping..")
             log_slave("`Imported payload produced no new coverage, skipping..", self.slave.slave_id)
 
 
@@ -372,7 +372,7 @@ class FuzzingStateLogic:
             self.stage_update_label(label)
 
         parent_info = self.get_parent_info(extra_info)
-        bitmap, is_new = self.slave.execute(payload, parent_info, state=state, label=label)  # debug
+        bitmap, is_new = self.slave.execute(payload, parent_info, state=state, label=label)
         if is_new:
             self.stage_info_findings += 1
         return bitmap, is_new

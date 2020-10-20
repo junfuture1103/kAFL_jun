@@ -43,9 +43,16 @@ class Scheduler:
 
     # TODO: node skipping by p(x) conflicts with queue sorting..
     def should_be_scheduled(self, queue, node):
+        """
+        Nodes recored crash should not be scheduled.
+        Not interesting nodes which are in final state are scheduled
+        in less probability.
+
+        Arguments:
+            node -- selected node in queue
+        """
         # Always skip crashing node
         SKIP_CRASHING_PROB = 100
-        """ SKIP_CRASHING_PROB = 80 """
         SKIP_NONFAV_PROB = 50
 
         if node.get_exit_reason() != "regular":

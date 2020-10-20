@@ -17,6 +17,15 @@ from kafl_conf import SHOW_QUEUE
 TRIM_QUEUE = True
 
 class InputQueue:
+    """
+    InputQueue manages a queue of fuzz inputs (nodes).
+    Nodes are selected in priority-based manner.
+
+    Members:
+        num_slaves -- the number of slave processes
+        scheduler -- scheduler instance
+        current_cycle -- queue of inputs (list)
+    """
     def __init__(self, config, statistics):
         self.num_slaves = config.argument_values['p']
         self.scheduler = Scheduler()
@@ -27,6 +36,10 @@ class InputQueue:
         self.statistics = statistics
 
     def get_next(self, retry=False):
+        """
+        Pop a node from the queue and check it could be scheduled.
+        If the node is eligible, return it to the master process.
+        """
         if len(self.id_to_node) == 0:
             return None
 
@@ -53,7 +66,6 @@ class InputQueue:
                 msg += info
             msg += '        ]'
             debug(msg)
-            # time.sleep(1.5)
 
         while self.current_cycle:
             node = self.current_cycle.pop()
@@ -63,6 +75,10 @@ class InputQueue:
                         node.set_busy()
                     return node
 
+        """
+        If failed to find eligible node,
+        sort the queue and try again.
+        """
         self.update_current_cycle()
     
         if retry:
