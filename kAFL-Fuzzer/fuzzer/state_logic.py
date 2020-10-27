@@ -8,6 +8,7 @@ Main logic used by Slaves to push nodes through various fuzzing stages/mutators.
 """
 
 
+import os
 import time
 from array import array
 
@@ -25,6 +26,7 @@ from fuzzer.technique.redqueen.mod import RedqueenInfoGatherer
 from fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from fuzzer.technique.trim import perform_trim, perform_center_trim
 from fuzzer.technique.helper import rand
+from common.util import atomic_write
 
 # debug
 from debug.log import debug
@@ -37,6 +39,7 @@ class FuzzingStateLogic:
     COLORIZATION_COUNT = 1
     COLORIZATION_STEPS = 1500
     COLORIZATION_TIMEOUT = 5
+    i = 0
 
     def __init__(self, slave, config):
         self.slave = slave
@@ -339,51 +342,43 @@ class FuzzingStateLogic:
         return self.slave.validate_bytes(payload, metadata, parent_info)
 
     def filter(self, payload):
-        code_constraints = [ 
-            {'ioctl_code':0xa3350404, 'inputBufferLength':0x10, 'static':True},
+        constraints = [ 
             {'ioctl_code':0xa3350408, 'inputBufferLength':0x10, 'static':True},
-            {'ioctl_code':0xa335040c, 'inputBufferLength':0xfff, 'static':False}, # None
+            {'ioctl_code':0xa335040c, 'inputBufferLength':0xff, 'static':False},
             {'ioctl_code':0xa3350410, 'inputBufferLength':0x0, 'static':True},
-            {'ioctl_code':0xa3350424, 'inputBufferLength':0xfff, 'static':False},
-            {'ioctl_code':0xa335041c, 'inputBufferLength':0x10, 'static':False},
-            {'ioctl_code':0xa3350414, 'inputBufferLength':0xfffff, 'static':False}, 
+            {'ioctl_code':0xa3350424, 'inputBufferLength':0xff, 'static':False},
+            {'ioctl_code':0xa335041c, 'inputBufferLength':0xff, 'static':False},
             {'ioctl_code':0xa335044c, 'inputBufferLength':0x4, 'static':True},
             {'ioctl_code':0xa3350418, 'inputBufferLength':0x0, 'static':True},
-            {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True}
+            {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True},
+            {'ioctl_code':0xa3350444, 'inputBufferLength':0x4, 'static':True}
         ]
-        
-        payload = payload.decode('iso-8859-9')
 
-        i  = 0
+        i = 0
         while(i < len(payload)):
-            try:
-                pIndex = int(payload[i])
-                # print("pIndex:", pIndex)
-            except:
-                # print("except: ", payload[i])
-                return False
-            
-            if pIndex < len(code_constraints):
-                i += code_constraints[pIndex]['inputBufferLength'] + 1
+            cIndex = payload[i]
+
+            if cIndex < len(constraints):
+                i += constraints[cIndex]['inputBufferLength'] + 1
                 if i < len(payload):
-                    continue
-                elif i == len(payload):
-                    return True
-                elif code_constraints[pIndex]['static'] == False:
-                    return True
-                else:
                     return False
+                else: # i => len(payload)
+                    if i > len(payload) and constraints[cIndex]['static'] == True:
+                        return False
+                return True
             else:
                 return False
-            return False
 
     def execute(self, payload, label=None, extra_info=None, state=None):
-        
         if (state != "import"):
             filtering_res = self.filter(payload)
             if filtering_res != True:
                 return
-        
+
+        filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
+        atomic_write(filename, payload)
+        self.i += 1
+
         self.stage_info_execs += 1
         if label and label != self.stage_info["method"]:
             self.stage_update_label(label)

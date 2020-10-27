@@ -81,7 +81,7 @@ class InputQueue:
         # TODO: Sorting the queue is relatively expensive and can turn the
         # master into a bottleneck. Experiment with cylce_factor to find a nice
         # compromise, or fix Slaves to return less often.
-        cycle_factor = 1
+        cycle_factor = 4
         cycle_size = int(cycle_factor*self.num_slaves)
 
         self.num_cycles += 1

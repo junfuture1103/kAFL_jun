@@ -8,62 +8,60 @@ Designed for medcored.sys.
 #include <stdint.h>
 #include "kafl_user.h"
 
+#define CODE_MAX_LEN 10
+
 typedef enum {false, true} bool;
 
 typedef struct _kAFL_IRP {
-    DWORD ioctlCode;
+    uint32_t ioctlCode;
     int32_t inputBufferSize;
     int32_t outputBufferSize;
     uint8_t* payload;
-    bool is_static;
 } kAFL_IRP;
 
 
 kAFL_IRP constraints[10] = {
-    {0xa3350444, 0x4, 0x10, NULL, true},
-    {0xa3350408, 0xfff, 0x30, NULL, true},
-    {0xa335040c, 0x20, 0x30, NULL, false},
-    {0xa3350410, 0x0, 0x0, NULL, true},
-    {0xa3350424, 0xfff, 0x30, NULL, false},
-    {0xa335041c, 0x10, 0x30, NULL, false},
-    {0xa3350414, 0xffff, 0x30, NULL, false},
-    {0xa335044c, 0x4, 0x30, NULL, true},
-    {0xa3350418, 0x0, 0x0, NULL, true},
-    {0xa3350448, 0x4, 0x30, NULL, true}
+    {0xa3350408, 0x10, 0xff, NULL},
+    {0xa335040c, 0xff, 0xff, NULL},
+    {0xa3350410, 0x0, 0x0, NULL},
+    {0xa3350424, 0xff, 0xff, NULL},
+    {0xa335041c, 0xff, 0xff, NULL},
+    {0xa335044c, 0x4, 0xff, NULL},
+    {0xa3350418, 0x0, 0x0, NULL},
+    {0xa3350448, 0x4, 0xff, NULL},
+    {0xa3350444, 0x4, 0xff, NULL},
+    {0xa3350450, 0x4, 0xff, NULL}
 };
 
-int32_t decode_payload(uint8_t* data, int32_t size, kAFL_IRP decoded_buf[]) 
+bool decode_payload(uint8_t* data, int32_t size, kAFL_IRP *decoded_buf) 
 {
-    int32_t cIndex;
-    int32_t decoded_len = 0;
-    for (int i = 0; i < size && decoded_len < 0x20;) {
-        cIndex = data[i] - '0';
-        if (cIndex < 0 ||cIndex > 9)
-            return -1;
-        decoded_buf[decoded_len].ioctlCode = constraints[cIndex].ioctlCode;
+    uint8_t cIndex = data[0];
+    if (cIndex > CODE_MAX_LEN)
+        return false;
+    hprintf("cIndex: %d\n", cIndex);
+    decoded_buf->ioctlCode = constraints[cIndex].ioctlCode;
 
-        if (size < i + constraints[cIndex].inputBufferSize + 1)
-            decoded_buf[decoded_len].inputBufferSize = size - i - 1;
-        else
-            decoded_buf[decoded_len].inputBufferSize = constraints[cIndex].inputBufferSize;
+    if (size < constraints[cIndex].inputBufferSize + 1)
+        decoded_buf->inputBufferSize = size - 1;
+    else
+        decoded_buf->inputBufferSize = constraints[cIndex].inputBufferSize;
 
-        if (decoded_buf[decoded_len].inputBufferSize != 0) 
-            decoded_buf[decoded_len].payload = &data[i+1];
-        else 
-            decoded_buf[decoded_len].payload = NULL;
+    if (decoded_buf->inputBufferSize != 0) 
+        decoded_buf->payload = &data[1];
+    else 
+        decoded_buf->payload = NULL;
 
-        decoded_buf[decoded_len].outputBufferSize = constraints[cIndex].outputBufferSize;
-        i += decoded_buf[decoded_len].inputBufferSize + 1;
-        decoded_len++;
-    }
-    return decoded_len;
+    decoded_buf->outputBufferSize = constraints[cIndex].outputBufferSize;
+
+    return true;
 }
 
 int main(int argc, char** argv)
 {
-    kAFL_IRP decoded_buf[0x20];
-    uint8_t *outBuffer = NULL;
-    char buf[0x100];
+    kAFL_IRP decoded_buf;
+    uint8_t outBuffer[0xff];
+    uint8_t buf[0x1000];
+    
 
     hprintf("Starting... %s\n", argv[0]);
 
@@ -111,34 +109,32 @@ int main(int argc, char** argv)
         }
         hprintf("origianl payload: %s, original size: %d\n", buf, payload_buffer->size);
 
-        int32_t decoded_len = decode_payload(payload_buffer->data, payload_buffer->size, decoded_buf);
-        if (decoded_len == -1)
+        bool is_decoded = decode_payload(payload_buffer->data, payload_buffer->size, &decoded_buf);
+        if (is_decoded == false)
             continue;
 
-        for (int i = 0; i < decoded_len; i++) {
-            memset(buf, 0x00, sizeof(buf));
-            memcpy(buf, (const char *)decoded_buf[i].payload, decoded_buf[i].inputBufferSize);
-            for (int j = 0; j < decoded_buf[i].inputBufferSize; j++) {
-                if (buf[j] <= 0x20 || 0x7f <= buf[j]) {
-                    buf[j] = '.';
-                }
+        memset(buf, 0x00, sizeof(buf));
+        memcpy(buf, (const char *)decoded_buf.payload, decoded_buf.inputBufferSize);
+        for (int j = 0; j < decoded_buf.inputBufferSize; j++) {
+            if (buf[j] <= 0x20 || 0x7f <= buf[j]) {
+                buf[j] = '.';
+            }
         }
 
-            /* kernel fuzzing */
-            hprintf("Injecting data... (payload: %s, size: %d)\n", buf, decoded_buf[i].inputBufferSize);
-            kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0);
-            /* kernel fuzzing */
-            DeviceIoControl(kafl_vuln_handle,
-                decoded_buf[i].ioctlCode,
-                (LPVOID)decoded_buf[i].payload,
-                (DWORD)decoded_buf[i].inputBufferSize,
-                (LPVOID)outBuffer,
-                (DWORD)decoded_buf[i].outputBufferSize,
-                NULL,
-                NULL
-            );
-        }
-        
+        /* kernel fuzzing */
+        hprintf("Injecting data... (payload: %s, size: %d)\n", buf, decoded_buf.inputBufferSize);
+        kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0);
+        /* kernel fuzzing */
+        DeviceIoControl(kafl_vuln_handle,
+            decoded_buf.ioctlCode,
+            (LPVOID)decoded_buf.payload,
+            (DWORD)decoded_buf.inputBufferSize,
+            (LPVOID)outBuffer,
+            (DWORD)decoded_buf.outputBufferSize,
+            NULL,
+            NULL
+        );
+
         /* inform fuzzer about finished fuzzing iteration */
         hprintf("Injection finished.\n");
         kAFL_hypercall(HYPERCALL_KAFL_RELEASE, 0);

@@ -80,7 +80,8 @@ def prepare_working_dir(workdir, purge=False, if_arr=None):
         "/corpus/timeout",
         "/metadata",
         "/bitmaps",
-        "/imports"
+        "/imports",
+        "/inputs"
     ]
 
     shutil.rmtree(workdir, ignore_errors=True)
