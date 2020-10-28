@@ -334,7 +334,7 @@ class qemu:
                 log_qemu("[RECV] " + "unknown cmd '" + res + "'" + str(e), self.qemu_id)
                 raise e
 
-    def __debug_recv(self):
+    def __debug_recv(self): # __debug_recv()에서는 Qemu가 Crash라고 처리하였다는 정보만으로 Crash임을 판단.
         while True:
             try:
                 res = self.control.recv(1)
@@ -357,7 +357,6 @@ class qemu:
                     if sig == 0: # regular shutdown? still report as KASAN
                         return qemu_protocol.KASAN
                     else:
-                        # playsound('/home/user/Music/life_theater.mp3')
                         raise EOFError("Qemu exited with signal: %s" % str(sig))
 
             if res == qemu_protocol.PRINTF:

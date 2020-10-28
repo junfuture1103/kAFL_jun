@@ -8,7 +8,7 @@ Designed for medcored.sys.
 #include <stdint.h>
 #include "kafl_user.h"
 
-#define CODE_MAX_LEN 10
+#define CODE_MAX_LEN 3
 
 typedef enum {false, true} bool;
 
@@ -20,17 +20,23 @@ typedef struct _kAFL_IRP {
 } kAFL_IRP;
 
 
+// kAFL_IRP constraints[10] = {
+//     {0xa3350408, 0x10, 0xff, NULL},
+//     {0xa335040c, 0xff, 0xff, NULL},
+//     {0xa3350410, 0x0, 0x0, NULL},
+//     {0xa3350424, 0xff, 0xff, NULL},
+//     {0xa335041c, 0xff, 0xff, NULL},
+//     {0xa335044c, 0x4, 0xff, NULL},
+//     {0xa3350418, 0x0, 0x0, NULL},
+//     {0xa3350448, 0x4, 0xff, NULL},
+//     {0xa3350444, 0x4, 0xff, NULL},
+//     {0xa3350450, 0x4, 0xff, NULL}
+// };
+
 kAFL_IRP constraints[10] = {
-    {0xa3350408, 0x10, 0xff, NULL},
-    {0xa335040c, 0xff, 0xff, NULL},
-    {0xa3350410, 0x0, 0x0, NULL},
-    {0xa3350424, 0xff, 0xff, NULL},
-    {0xa335041c, 0xff, 0xff, NULL},
-    {0xa335044c, 0x4, 0xff, NULL},
-    {0xa3350418, 0x0, 0x0, NULL},
-    {0xa3350448, 0x4, 0xff, NULL},
-    {0xa3350444, 0x4, 0xff, NULL},
-    {0xa3350450, 0x4, 0xff, NULL}
+    {0x222003, 0xff, 0x0, NULL},
+    {0x222013, 0xff, 0x0, NULL},
+    {0x222023, 0xff, 0x0, NULL}
 };
 
 bool decode_payload(uint8_t* data, int32_t size, kAFL_IRP *decoded_buf) 
@@ -67,8 +73,8 @@ int main(int argc, char** argv)
 
     /* open vulnerable driver */
     HANDLE kafl_vuln_handle = NULL;
-    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\medcored");
-    kafl_vuln_handle = CreateFile((LPCSTR)"\\\\.\\medcored",
+    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\toy");
+    kafl_vuln_handle = CreateFile((LPCSTR)"\\\\.\\toy",
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,

@@ -69,7 +69,7 @@ def mutate_seq_four_walking_bits(data, func, skip_null=False, effector_map=None,
 def mutate_seq_walking_byte(data, func, effector_map=None, limiter_map=None, skip_null=False, state=None):
 
     # if effector_map:
-    #     orig_bitmap, _ = func(data, state=state)
+        # orig_bitmap, _ = func(data, label="afl_flip_8/1", state=state)
 
     for i in range(len(data)):
         if limiter_map:
@@ -83,7 +83,7 @@ def mutate_seq_walking_byte(data, func, effector_map=None, limiter_map=None, ski
         # bitmap, _ = func(data, label="afl_flip_8/1", state=state)
         func(data, label="afl_flip_8/1", state=state)
         # if effector_map and orig_bitmap == bitmap:
-        #    effector_map[i] = 0
+            # effector_map[i] = 0
         data[i] ^= 0xFF
 
 

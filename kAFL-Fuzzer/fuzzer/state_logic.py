@@ -342,16 +342,22 @@ class FuzzingStateLogic:
         return self.slave.validate_bytes(payload, metadata, parent_info)
 
     def filter(self, payload):
+        # constraints = [ 
+        #     {'ioctl_code':0xa3350408, 'inputBufferLength':0x10, 'static':True},
+        #     {'ioctl_code':0xa335040c, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa3350410, 'inputBufferLength':0x0, 'static':True},
+        #     {'ioctl_code':0xa3350424, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa335041c, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa335044c, 'inputBufferLength':0x4, 'static':True},
+        #     {'ioctl_code':0xa3350418, 'inputBufferLength':0x0, 'static':True},
+        #     {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True},
+        #     {'ioctl_code':0xa3350444, 'inputBufferLength':0x4, 'static':True}
+        # ]
+
         constraints = [ 
-            {'ioctl_code':0xa3350408, 'inputBufferLength':0x10, 'static':True},
-            {'ioctl_code':0xa335040c, 'inputBufferLength':0xff, 'static':False},
-            {'ioctl_code':0xa3350410, 'inputBufferLength':0x0, 'static':True},
-            {'ioctl_code':0xa3350424, 'inputBufferLength':0xff, 'static':False},
-            {'ioctl_code':0xa335041c, 'inputBufferLength':0xff, 'static':False},
-            {'ioctl_code':0xa335044c, 'inputBufferLength':0x4, 'static':True},
-            {'ioctl_code':0xa3350418, 'inputBufferLength':0x0, 'static':True},
-            {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True},
-            {'ioctl_code':0xa3350444, 'inputBufferLength':0x4, 'static':True}
+            {'ioctl_code':0x222003, 'inputBufferLength':0xff, 'static':False},
+            {'ioctl_code':0x222013, 'inputBufferLength':0xff, 'static':False},
+            {'ioctl_code':0x222023, 'inputBufferLength':0xff, 'static':False},
         ]
 
         i = 0
