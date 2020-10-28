@@ -464,7 +464,7 @@ void pt_handle_overflow(CPUState *cpu){
 
 void pt_post_kvm_run(CPUState *cpu){
 	#ifdef QEMU_DEBUG
-	debug("pt_post_kvm_run() called.");
+	// debug("pt_post_kvm_run() called.");
 	#endif
 
 	pt_handle_overflow(cpu);

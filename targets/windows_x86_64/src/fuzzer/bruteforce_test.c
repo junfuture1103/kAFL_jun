@@ -8,7 +8,7 @@ Designed for medcored.sys.
 #include <stdint.h>
 #include "kafl_user.h"
 
-#define CODE_MAX_LEN 3
+#define CODE_MAX_LEN 40
 
 typedef enum {false, true} bool;
 
@@ -17,26 +17,50 @@ typedef struct _kAFL_IRP {
     int32_t inputBufferSize;
     int32_t outputBufferSize;
     uint8_t* payload;
+    //bool isStatic;
 } kAFL_IRP;
 
-
-// kAFL_IRP constraints[10] = {
-//     {0xa3350408, 0x10, 0xff, NULL},
-//     {0xa335040c, 0xff, 0xff, NULL},
-//     {0xa3350410, 0x0, 0x0, NULL},
-//     {0xa3350424, 0xff, 0xff, NULL},
-//     {0xa335041c, 0xff, 0xff, NULL},
-//     {0xa335044c, 0x4, 0xff, NULL},
-//     {0xa3350418, 0x0, 0x0, NULL},
-//     {0xa3350448, 0x4, 0xff, NULL},
-//     {0xa3350444, 0x4, 0xff, NULL},
-//     {0xa3350450, 0x4, 0xff, NULL}
-// };
-
-kAFL_IRP constraints[10] = {
-    {0x222003, 0xff, 0x0, NULL},
-    {0x222013, 0xff, 0x0, NULL},
-    {0x222023, 0xff, 0x0, NULL}
+kAFL_IRP constraints[40] = {
+    {0xa3350408, 0x10, 0xffff, NULL},//size(index + 1)
+    {0xa335040c, 0xffff, 0xffff, NULL},
+    {0xa3350410, 0x0, 0x0, NULL},
+    {0xa3350414, 0xffff, 0xffff, NULL},
+    {0xa3350424, 0xffff, 0xffff, NULL},//5
+    {0xa335041c, 0xffff, 0xffff, NULL},
+    {0xa335044c, 0x4, 0xffff, NULL},
+    {0xa3350418, 0x0, 0x0, NULL},
+    {0xa3350448, 0x4, 0xffff, NULL},
+    {0xa3350444, 0x4, 0xffff, NULL},//10
+    {0xa3350450, 0x4, 0xffff, NULL},
+    {0xa3350420, 0x4, 0xffff, NULL},
+    {0xa3350040, 0xffff,0x10,NULL},
+    {0xa3350018, 0xffff,0xffff,NULL},
+    {0xa335004c, 0x4,0xffff,NULL},//15
+    {0xa3350008, 0xffff,0xffff,NULL},
+    {0xa3350020, 0x4,0xffff,NULL},
+    {0xa335000c, 0x4,0xffff,NULL},
+    {0xa3350000, 0xffff,0x328,NULL},
+    {0xa3350028, 0x8,0xffff,NULL},//20
+    {0xa3350048, 0x4,0xffff,NULL},
+    {0xa3350024, 0x4,0xffff,NULL},
+    {0xa335001c, 0xffff,0xffff,NULL},
+    {0xa335002c, 0x14,0x47e,NULL},
+    {0xa3350034, 0xffff,0xffff,NULL},//25(24)
+    {0xa3350014, 0x400,0xffff,NULL},
+    {0xa3350038, 0xffff,0xffff,NULL},
+    {0xa3350030, 0x4,0xffff,NULL},
+    {0xa3350004, 0xffff,0xffff,NULL},
+    {0xa3350044, 0x1,0xffff,NULL},//30(29)
+    {0xa335003c, 0xffff, 0xffff,NULL},
+    {0xacd2201c, 0xffff, 0xffff,NULL},
+    {0xacd22018, 0xffff, 0xffff,NULL},
+    {0xacd22004, 0xffff, 0xffff,NULL},
+    {0xacd22020, 0xffff, 0xffff,NULL},//35(34)
+    {0xacd22014, 0xffff, 0xffff,NULL},
+    {0xacd22010, 0xffff, 0xffff,NULL},
+    {0xacd22008, 0xffff, 0xffff,NULL},
+    {0xacd2200c, 0xffff, 0xffff,NULL},
+    {0xacd22024, 0Xffff, 0xffff,NULL}//40(39)
 };
 
 bool decode_payload(uint8_t* data, int32_t size, kAFL_IRP *decoded_buf) 
@@ -65,16 +89,16 @@ bool decode_payload(uint8_t* data, int32_t size, kAFL_IRP *decoded_buf)
 int main(int argc, char** argv)
 {
     kAFL_IRP decoded_buf;
-    uint8_t outBuffer[0xff];
-    uint8_t buf[0x1000];
+    uint8_t outBuffer[0xffff];
+    uint8_t buf[0xffff];
     
 
     hprintf("Starting... %s\n", argv[0]);
 
     /* open vulnerable driver */
     HANDLE kafl_vuln_handle = NULL;
-    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\toy");
-    kafl_vuln_handle = CreateFile((LPCSTR)"\\\\.\\toy",
+    hprintf("Attempting to open vulnerable device file (%s)\n", "\\\\.\\medcored");
+    kafl_vuln_handle = CreateFile((LPCSTR)"\\\\.\\medcored",
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,
@@ -92,7 +116,7 @@ int main(int argc, char** argv)
     kAFL_payload* payload_buffer = (kAFL_payload*)VirtualAlloc(0, PAYLOAD_SIZE, MEM_COMMIT, PAGE_READWRITE);
 
     hprintf("Memset kAFL_payload at address %lx (size %d)\n", (uint64_t) payload_buffer, PAYLOAD_SIZE);
-    memset(payload_buffer, 0xff, PAYLOAD_SIZE);
+    memset(payload_buffer, 0xffff, PAYLOAD_SIZE);
 
     /* submit the guest virtual address of the payload buffer */
     hprintf("Submitting buffer address to hypervisor...\n");

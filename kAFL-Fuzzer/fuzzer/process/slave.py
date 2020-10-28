@@ -310,7 +310,7 @@ class SlaveProcess:
                 self.__send_to_master(data, exec_res, info)
 
         # restart Qemu on crash
-        if crash:
+        if crash or timeout:
             self.statistics.event_reload()
             self.q.restart()
 

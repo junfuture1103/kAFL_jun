@@ -376,10 +376,10 @@ class FuzzingStateLogic:
                 return False
 
     def execute(self, payload, label=None, extra_info=None, state=None):
-        if (state != "import"):
-            filtering_res = self.filter(payload)
-            if filtering_res != True:
-                return
+        # if (state != "import"):
+        #     filtering_res = self.filter(payload)
+        #     if filtering_res != True:
+        #         return None, None
 
         filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
         atomic_write(filename, payload)

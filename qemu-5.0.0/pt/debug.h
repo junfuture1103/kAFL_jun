@@ -38,10 +38,10 @@
 
 /* debug flag */
 #define QEMU_DEBUG              1
-#define QEMU_DEBUG_PKT			1
+// #define QEMU_DEBUG_PKT			1
 /* #define QEMU_DEBUG_DUMP         1 */
-#define QEMU_DEBUG_FLOW         1
-#define QEMU_DEBUG_DISASS		1
+// #define QEMU_DEBUG_FLOW         1
+// #define QEMU_DEBUG_DISASS		1
 
 /* debug */
 #define FLOW_PREFIX             "[FLOW] "
