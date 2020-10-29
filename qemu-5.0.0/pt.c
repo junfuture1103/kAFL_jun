@@ -451,10 +451,6 @@ void pt_handle_overflow(CPUState *cpu){
 
 	int overflow = ioctl(cpu->pt_fd, KVM_VMX_PT_CHECK_TOPA_OVERFLOW, (unsigned long)0);
 	if (overflow > 0){
-		#ifdef QEMU_DEBUG
-		debug("ToPA overflow!");
-		#endif
-
 		cpu->overflow_counter++;
 		pt_dump(cpu, overflow);
 	}  

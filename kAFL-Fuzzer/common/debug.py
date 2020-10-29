@@ -51,7 +51,8 @@ def log_update(msg):
 
 
 def log_slave(msg, qid):
-    logger("[SLAVE " + str(qid) + "]\t" + msg)
+    # logger("[SLAVE " + str(qid) + "]\t" + msg)
+    pass
 
 
 def log_tree(msg):
@@ -90,3 +91,6 @@ def log_debug(msg):
 
 def get_log_file():
     return output_file
+
+def log_save(msg):
+    logger("\033[1;32m[SAVED]\033[0m\t" + msg)

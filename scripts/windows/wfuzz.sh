@@ -7,7 +7,7 @@ python3 kAFL-Fuzzer/kafl_fuzz.py \
 	-mem 4096 \
 	-seed_dir in/ \
 	-work_dir out/ \
-	-ip0 0xfffff80716c80000-0xfffff80716c87000 \
+	-ip0 0xfffff8022c1c0000-0xfffff8022c2c5000 \
 	-d \
 	-v \
 	-p 1 \

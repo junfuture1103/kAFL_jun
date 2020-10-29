@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os
 import sys
 import time
 import argparse
@@ -9,6 +10,7 @@ parser = argparse.ArgumentParser(description='Get Windows driver base address an
 parser.add_argument('name', help='device or symlink name', type=str)
 args = parser.parse_args()
 
+os.chdir("/home/user/kAFL")
 # disassembler.c file path
 SRC = './qemu-5.0.0/pt/disassembler.c'
 
@@ -72,7 +74,7 @@ script += 'cd ~/kAFL/\n'
 script += 'python3 kAFL-Fuzzer/kafl_fuzz.py \\\n'
 script += '\t-vm_ram snapshot_win/ \\\n'
 script += '\t-vm_dir snapshot_win/ \\\n'
-script += '\t-agent targets/windows_x86_64/bin/fuzzer/hprintf_test.exe \\\n'
+script += '\t-agent targets/windows_x86_64/bin/fuzzer/bruteforce_test.exe \\\n'
 script += '\t-mem 4096 \\\n'
 script += '\t-seed_dir in/ \\\n'
 script += '\t-work_dir out/ \\\n'

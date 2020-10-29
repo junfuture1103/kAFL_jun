@@ -18,7 +18,7 @@ import fuzzer.technique.grimoire_mutations as grimoire
 import fuzzer.technique.havoc as havoc
 import fuzzer.technique.radamsa as radamsa
 import fuzzer.technique.interesting_values as interesting_values
-from common.debug import log_slave, log_grimoire, log_redq
+from common.debug import log_slave, log_grimoire, log_redq, log_save
 from fuzzer.node import QueueNode
 from fuzzer.technique.grimoire_inference import GrimoireInference
 from fuzzer.technique.redqueen.colorize import ColorizerStrategy
@@ -407,8 +407,9 @@ class FuzzingStateLogic:
         #     if filtering_res != True:
         #         return None, None
 
-        filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
+        filename = "/home/user/kAFL/out/inputs/payload_%07d" % (self.i)
         atomic_write(filename, payload)
+        log_save("Saved payload_%07d" % (self.i))
         self.i += 1
 
         

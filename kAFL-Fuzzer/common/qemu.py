@@ -349,7 +349,7 @@ class qemu:
             try:
                 res = self.control.recv(1)
                 #debugging_code
-                log_qemu("__debug_recv: " + str(res), self.qemu_id)
+                # log_qemu("__debug_recv: " + str(res), self.qemu_id)
             except ConnectionResetError:
                 if self.exiting:
                     sys.exit(0)
@@ -695,7 +695,7 @@ class qemu:
         Wait for guest result and triage it
         to create and return new ExecutionResult instance.
         """
-        log_qemu("Send payload..", self.qemu_id)
+        # log_qemu("Send payload..", self.qemu_id)
 
         if self.exiting:
             sys.exit(0)

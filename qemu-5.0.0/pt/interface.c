@@ -90,7 +90,7 @@ static void send_char(char val, void* tmp_s){
     int res;
 	kafl_mem_state *s = tmp_s;
 	res = qemu_chr_fe_write(&s->chr, (const uint8_t *) &val, 1);
-    printf(QEMU_DEBUG_BLUE "[INTERFACE] " QEMU_DEBUG_ENDC "send char: %c, res: %d\n", val, res);
+    // printf(QEMU_DEBUG_BLUE "[INTERFACE] " QEMU_DEBUG_ENDC "send char: %c, res: %d\n", val, res);
 }
 
 static int kafl_guest_can_receive(void * opaque){
