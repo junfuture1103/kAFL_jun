@@ -15,4 +15,4 @@ mkdir out/
 	-hdb ~/kAFL/snapshot_win/ram_0.qcow2 \
 	-hda ~/kAFL/snapshot_win/overlay_0.qcow2 \
 	-machine q35 -serial mon:stdio -net none \
-	-enable-kvm -m 4096 \
+	-enable-kvm -m 4096

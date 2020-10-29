@@ -25,6 +25,10 @@ from common.util import prepare_working_dir, print_fail, print_note, print_warni
 from fuzzer.process.master import MasterProcess
 from fuzzer.process.slave import slave_loader
 
+# drift
+from drift.interface import Interface
+from drift.util import get_interfaces
+
 # debug
 from debug.log import debug_warn, debug_except, debug_kafl
 
@@ -65,10 +69,16 @@ def start(config):
     seed_dir = config.argument_values["seed_dir"]
     num_slaves = config.argument_values['p']
 
+    iff = config.argument_values["iff"]
+    if_arr = None   # list of interfaces - used only in drift mode
+    if iff != None:
+        if_arr = get_interfaces(iff)
+
     if config.argument_values['v']:
         enable_logging(work_dir)
 
-    if not prepare_working_dir(work_dir, purge=config.argument_values['purge']):
+    purge = config.argument_values['purge']
+    if not prepare_working_dir(work_dir, purge=purge, if_arr=if_arr):
         print_fail("Refuse to operate on existing work directory. Use --purge to override.")
         return 1
 

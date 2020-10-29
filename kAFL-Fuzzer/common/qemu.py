@@ -340,6 +340,7 @@ class qemu:
                 log_qemu("[RECV] " + "unknown cmd '" + res + "'" + str(e), self.qemu_id)
                 raise e
 
+
     def __debug_recv(self):
         """
         Receive 1 byte of signal from the socket.
@@ -366,7 +367,6 @@ class qemu:
                     if sig == 0: # regular shutdown? still report as KASAN
                         return qemu_protocol.KASAN
                     else:
-                        # playsound('/home/user/Music/life_theater.mp3')
                         raise EOFError("Qemu exited with signal: %s" % str(sig))
 
             if res == qemu_protocol.PRINTF:

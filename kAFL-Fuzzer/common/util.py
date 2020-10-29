@@ -12,6 +12,7 @@ import string
 from shutil import copyfile
 
 from common import color
+from drift.interface import Interface
 
 class Singleton(type):
     _instances = {}
@@ -69,13 +70,25 @@ def find_diffs(data_a, data_b):
             last_diff = i
     return first_diff, last_diff
 
-def prepare_working_dir(workdir, purge=False):
+def prepare_working_dir(workdir, purge=False, if_arr=None):
+    """Create directories for storing mutating inputs
+    and metadata
+    
+    Arguments:
+        workdir -- output directory"""
     if os.path.exists(workdir) and not purge:
         return False
 
-    folders = ["/corpus/regular", "/corpus/crash",
-               "/corpus/kasan", "/corpus/timeout",
-               "/metadata", "/bitmaps", "/imports"]
+    folders = [
+        "/corpus/regular",
+        "/corpus/crash",
+        "/corpus/kasan",
+        "/corpus/timeout",
+        "/metadata",
+        "/bitmaps",
+        "/imports",
+        "/inputs"
+    ]
 
     shutil.rmtree(workdir, ignore_errors=True)
 
@@ -86,8 +99,16 @@ def prepare_working_dir(workdir, purge=False):
     if os.path.exists("/dev/shm/kafl_tfilter"):
         os.remove("/dev/shm/kafl_tfilter")
 
-    for folder in folders:
-        os.makedirs(workdir + folder)
+    if if_arr != None:
+        # Use drift mode - create output directories per interface
+        for _if in if_arr:
+            for folder in folders:
+                dirname = workdir + '/' + str(_if.id) + folder
+                os.makedirs(dirname)
+    else:
+        # Not using drift mode - fuzzing single routine
+        for folder in folders:
+            os.makedirs(workdir + folder)
 
     return True
 

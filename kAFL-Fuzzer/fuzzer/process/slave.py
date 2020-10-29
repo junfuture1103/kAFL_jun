@@ -284,21 +284,19 @@ class SlaveProcess:
 
         # show mutated payloads
         if SHOW_PAYLOAD:
-            pay = data.decode('iso-8859-9').encode('utf-8').decode('utf-8')
-            show = ''
-            for i in range(len(pay)):
-                if 0x20 > ord(pay[i]) or ord(pay[i]) >= 0x80:
-                    show += '.'
+            payload = data.decode('iso-8859-9')
+            payload_readable = ''
+            for i in range(len(payload)):
+                if ord(payload[i]) <= 0x20 or 0x7f <= ord(payload[i]):
+                    payload_readable += '.'
                 else:
-                    show += pay[i]
-            if state:
-                    debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, show, len(show)))
-            else:
-                debug("payload: {}\t(len={})".format(show, len(show)))
+                    payload_readable += payload[i]
+            
+            debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, payload_readable, len(payload_readable)))
 
             import kafl_conf
             if kafl_conf.ENABLE_TUI:
-                PAYQ.put(show)
+                PAYQ.put(payload_readable)
 
         # store crashes and any validated new behavior
         # do validate timeouts and crashes at this point as they tend to be nondeterministic
@@ -332,7 +330,7 @@ class SlaveProcess:
                 self.__send_to_master(data, exec_res, info)
 
         # restart Qemu on crash
-        if crash:
+        if crash or timeout:
             self.statistics.event_reload()
             self.q.restart()
 

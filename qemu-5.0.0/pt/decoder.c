@@ -314,8 +314,7 @@ static inline uint64_t get_ip_val(uint8_t **pp, uint8_t *end, uint8_t len, uint6
 
 	/* debug */
 	#ifdef QEMU_DEBUG
-	debug("get_ip_val(len=%u, last_ip=%p) called.", len, last_ip);
-	/* debug("p: %p", p); */
+	debug("get_ip_val(len=%u, *last_ip=%p) called.", len, *last_ip - 0xfffff8011c4e0000);
 	#endif
 
 	switch(len){
@@ -348,9 +347,6 @@ static inline uint64_t get_ip_val(uint8_t **pp, uint8_t *end, uint8_t len, uint6
 			v = 0;
 			break;
 	}
-	#ifdef QEMU_DEBUG
-	debug("IP Payload: 0x%lx", v);
-	#endif
 	return v;
 }
 
@@ -391,10 +387,6 @@ static void tip_handler(decoder_t* self, uint8_t** p, uint8_t** end){
 }
 
 static void tip_pge_handler(decoder_t* self, uint8_t** p, uint8_t** end){
-	/* debug */
-	#ifdef QEMU_DEBUG
-	debug("tip_pge_handler() called.");
-	#endif
 
 	if(unlikely(self->fup_bind_pending)){
 		self->fup_bind_pending = false;
@@ -402,15 +394,8 @@ static void tip_pge_handler(decoder_t* self, uint8_t** p, uint8_t** end){
 		disasm(self);
 	}
 
-	/* debug */
-	/* uint8_t tmp = *(*p)++;
-	debug("tmp: %x", tmp); */
-
 	self->last_tip = get_ip_val(p, *end, (*(*p)++ >> PT_PKT_TIP_SHIFT), &self->last_tip_tmp);
 	WRITE_SAMPLE_DECODED_DETAILED("PGE    \t%lx\n", self->last_tip);
-
-	/* debug*/
-	/* debug("self->last_tip: %lx", self->last_tip); */
 
 	decoder_handle_pge(self->decoder_state, self->last_tip, self->decoder_state_result);
 	disasm(self);
@@ -426,10 +411,6 @@ static void tip_pge_handler(decoder_t* self, uint8_t** p, uint8_t** end){
 }
 
 static void tip_pgd_handler(decoder_t* self, uint8_t** p, uint8_t** end){
-	/* debug */
-	#ifdef QEMU_DEBUG
-	debug("tip_pgd_handler() called.");
-	#endif
 
 	if(unlikely(self->fup_bind_pending)){
 		self->fup_bind_pending = false;
@@ -494,9 +475,6 @@ static inline void pip_handler(decoder_t* self, uint8_t** p){
 
 #ifdef DECODER_LOG
 	flush_log(self);
-#endif
-#ifdef QEMU_DEBUG
-	debug("decode_buffer(map=%p, len=%u) called!", map, len);
 #endif
 
 #ifdef QEMU_DEBUG_DUMP

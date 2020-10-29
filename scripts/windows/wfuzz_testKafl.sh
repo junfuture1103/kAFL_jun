@@ -7,7 +7,10 @@ python3 kAFL-Fuzzer/kafl_fuzz.py \
 	-mem 4096 \
 	-seed_dir in/ \
 	-work_dir out/ \
-	-ip0 0xfffff8031da20000-0xfffff8031da27000 \
+	-ip0 0xfffff8011c610000-0xfffff8011c617000 \
 	-d \
 	-v \
+	-tui \
+	-graphic \
+	-p 1 \
 	--purge	-S windows

@@ -8,6 +8,7 @@ Main logic used by Slaves to push nodes through various fuzzing stages/mutators.
 """
 
 
+import os
 import time
 from array import array
 
@@ -25,6 +26,7 @@ from fuzzer.technique.redqueen.mod import RedqueenInfoGatherer
 from fuzzer.technique.redqueen.workdir import RedqueenWorkdir
 from fuzzer.technique.trim import perform_trim, perform_center_trim
 from fuzzer.technique.helper import rand
+from common.util import atomic_write
 
 # debug
 from debug.log import debug
@@ -41,6 +43,7 @@ class FuzzingStateLogic:
     COLORIZATION_COUNT = 1
     COLORIZATION_STEPS = 1500
     COLORIZATION_TIMEOUT = 5
+    i = 0
 
     def __init__(self, slave, config):
         self.slave = slave
@@ -359,14 +362,56 @@ class FuzzingStateLogic:
         parent_info = self.get_parent_info(extra_info)
         return self.slave.validate_bytes(payload, metadata, parent_info)
 
+    def filter(self, payload):
+        # constraints = [ 
+        #     {'ioctl_code':0xa3350408, 'inputBufferLength':0x10, 'static':True},
+        #     {'ioctl_code':0xa335040c, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa3350410, 'inputBufferLength':0x0, 'static':True},
+        #     {'ioctl_code':0xa3350424, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa335041c, 'inputBufferLength':0xff, 'static':False},
+        #     {'ioctl_code':0xa335044c, 'inputBufferLength':0x4, 'static':True},
+        #     {'ioctl_code':0xa3350418, 'inputBufferLength':0x0, 'static':True},
+        #     {'ioctl_code':0xa3350448, 'inputBufferLength':0x4, 'static':True},
+        #     {'ioctl_code':0xa3350444, 'inputBufferLength':0x4, 'static':True}
+        # ]
+
+        constraints = [ 
+            {'ioctl_code':0x222003, 'inputBufferLength':0xff, 'static':False},
+            {'ioctl_code':0x222013, 'inputBufferLength':0xff, 'static':False},
+            {'ioctl_code':0x222023, 'inputBufferLength':0xff, 'static':False},
+        ]
+
+        i = 0
+        while(i < len(payload)):
+            cIndex = payload[i]
+
+            if cIndex < len(constraints):
+                i += constraints[cIndex]['inputBufferLength'] + 1
+                if i < len(payload):
+                    return False
+                else: # i => len(payload)
+                    if i > len(payload) and constraints[cIndex]['static'] == True:
+                        return False
+                return True
+            else:
+                return False
 
     def execute(self, payload, label=None, extra_info=None, state=None):
         """
         Make slave execute target routine with given payload.
-
         Arguments:
-            payload -- payload to send
+        payload -- payload to send
         """
+        # if (state != "import"):
+        #     filtering_res = self.filter(payload)
+        #     if filtering_res != True:
+        #         return None, None
+
+        filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
+        atomic_write(filename, payload)
+        self.i += 1
+
+        
         self.stage_info_execs += 1
         if label and label != self.stage_info["method"]:
             self.stage_update_label(label)
@@ -376,7 +421,6 @@ class FuzzingStateLogic:
         if is_new:
             self.stage_info_findings += 1
         return bitmap, is_new
-
 
     def execute_redqueen(self, payload):
         self.stage_info_execs += 1

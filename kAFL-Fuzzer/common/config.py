@@ -127,8 +127,12 @@ def add_args_fuzzer(parser):
                         action='store_true', default=False)
     parser.add_argument('-cpu_affinity', metavar='<n>', help="limit processes to first n cores.",
                         type=int, required=False)
-    parser.add_argument('-tui', required=False, help='enable TUI based monitor',
+    
+    # added
+    parser.add_argument('-tui', required=False, help='[EXPERIMENTAL] enable TUI based monitor',
                         action='store_true', default=False)
+    parser.add_argument('-iff', required=False, metavar='<file>', action=FullPath,
+                        type=parse_is_file, help='[EXPERIMENTAL] result JSON file of driver interface recovery')
 
 # Qemu/Slave-specific launch options
 def add_args_qemu(parser):

@@ -1,0 +1,7 @@
+strict digraph "" {
+	graph [defaultdist=2,
+		epsilon=0.0008
+	];
+	node [label="\N"];
+	0	[label=Start];
+}

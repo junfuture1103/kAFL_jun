@@ -440,7 +440,7 @@ static cofi_list* analyse_assembly(disassembler_t* self, uint64_t base_address, 
 		//if (self->debug){
 		//	printf("%lx:\t(%d)\t%s\t%s\t\t\n", insn->address, type, insn->mnemonic, insn->op_str);
 		//}
-		
+
 		if (!last_nop){
 			if (cofi)
 				predecessor = self->list_element;
@@ -709,7 +709,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 						/* test */
 						if (obj->cofi.target_addr < 0x100000000) {
-							obj->cofi.target_addr |= 0xfffff80300000000;
+							obj->cofi.target_addr |= 0xfffff80200000000;
 						}
 
 						/* call pt_bitmap */
@@ -812,7 +812,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 					/* test */
 					if (obj->cofi.target_addr < 0x100000000) {
-						obj->cofi.target_addr |= 0xfffff80300000000;
+						obj->cofi.target_addr |= 0xfffff80200000000;
 					}
 
 					obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
