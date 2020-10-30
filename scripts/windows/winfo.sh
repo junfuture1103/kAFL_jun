@@ -8,4 +8,5 @@ python3 kAFL-Fuzzer/kafl_info.py \
     -mem 4096 \
     -v \
     -work_dir out/ \
+	-S windows
 

@@ -77,20 +77,20 @@ int main(int argc, char** argv)
             continue;
 
         memset(buf, 0x00, sizeof(buf));
-        memcpy(buf, (const char *)decoded_buf.payload, decoded_buf.inputBufferSize);
-        for (int j = 0; j < decoded_buf.inputBufferSize; j++) {
+        memcpy(buf, (const char *)&payload_buffer->data[1], payload_buffer->size - 1);
+        for (int j = 0; j < payload_buffer->size - 1; j++) {
             if (buf[j] <= 0x20 || 0x7f <= buf[j]) {
                 buf[j] = '.';
             }
         }
-        hprintf("Injecting data... (code: 0x%x, payload: %s, size: %d)\n", decoded_buf.ioctlCode, buf, decoded_buf.inputBufferSize);
+        hprintf("Injecting data... (code: 0x%x, payload: %s, size: %d)\n", decoded_buf.ioctlCode, buf, payload_buffer->size - 1);
         kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0);
         
         /* kernel fuzzing */
         DeviceIoControl(kafl_vuln_handle,
             decoded_buf.ioctlCode,
             (LPVOID)&payload_buffer->data[1],
-            (DWORD)payload_buffer->size-1,
+            (DWORD)payload_buffer->size - 1,
             (LPVOID)outBuffer,
             (DWORD)decoded_buf.outputBufferSize,
             NULL,
