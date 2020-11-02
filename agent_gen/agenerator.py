@@ -29,16 +29,17 @@ for json in json_data:
             inputbuf = 65535
         data += hex(int(inputbuf))
         data += ','    
-
-    if json['OutputBufferLength'][0].split('-')[1] == 'inf':
-        json['OutputBufferLength'][0].split('-')[1] = '65535'
-    data += hex(int(inputbuf))
+    
+    outputbuf = json['OutputBufferLength'][0].split('-')[1] 
+    if outputbuf == 'inf':
+        outputbuf = '65535'
+    data += hex(int(outputbuf))
     data += ','    
 
     data = data[:-1]
     data += '},\n'
 data = data[:-2]
-
+print(data)
 f = open('./template.c', 'r')
 code = f.read()
 f.close()
@@ -51,4 +52,4 @@ f = open('./agent.c', 'w')
 f.write(code)
 f.close()
 
-print(data)
+#print(data)
