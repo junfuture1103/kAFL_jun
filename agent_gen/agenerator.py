@@ -30,8 +30,8 @@ for json in json_data:
         data += hex(int(inputbuf))
         data += ','    
 
-    if json['InputBufferLength'][0].split('-')[1] == 'inf':
-        json['InputBufferLength'][0].split('-')[1] = '65535'
+    if json['OutputBufferLength'][0].split('-')[1] == 'inf':
+        json['OutputBufferLength'][0].split('-')[1] = '65535'
     data += hex(int(inputbuf))
     data += ','    
 
