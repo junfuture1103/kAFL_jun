@@ -26,7 +26,7 @@ __CONSTRAINTS__
 bool filter_payload(uint8_t* data, int32_t size, kAFL_IRP *decoded_buf) 
 {
     uint8_t codeIndex = data[0];
-    if (codeIndex > CODE_MAX_LEN)
+    if (codeIndex >= CODE_MAX_LEN)
         return false;
     decoded_buf->ioctlCode = constraints[codeIndex].ioctlCode;
 
