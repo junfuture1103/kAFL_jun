@@ -14,8 +14,19 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 		x86_64-w64-mingw32-gcc src/fuzzer/vuln_test.c -I ../ -o bin/fuzzer/vuln_test.exe
         printf "\tCompiling hprintf test...\n"
         x86_64-w64-mingw32-gcc src/fuzzer/hprintf_test.c -I ../ -o bin/fuzzer/hprintf_test.exe -mwindows -Wall
+		printf "\tCompiling bruteforcing_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/bruteforce_test.c -I ../ -o bin/fuzzer/bruteforce_test.exe -mwindows -Wall
+		printf "\tCompiling relive_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/relive_test.c -I ../ -o bin/fuzzer/relive_test.exe -mwindows -Wall
+		printf "\tCompiling medcored_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/medcored_test.c -I ../ -o bin/fuzzer/medcored_test.exe -mwindows -Wall
+		printf "\tCompiling aswVmm_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/aswVmm_test.c -I ../ -o bin/fuzzer/aswVmm_test.exe -mwindows -Wall
+		printf "\tCompiling cng_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/cng_test.c -I ../ -o bin/fuzzer/cng_test.exe -mwindows -Wall
+	
 	else
-		printf "\tCould not find x86_64-w64-mingw32-gcc/g++! Skipping..\n\t(Try sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 to fix this)"
+	printf "\tCould not find x86_64-w64-mingw32-gcc/g++! Skipping..\n\t(Try sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 to fix this)"
 	fi 
 else
 	printf "\tError: Need to run Linux to compile these components! Skipping..!\n"

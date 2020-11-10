@@ -407,7 +407,7 @@ class FuzzingStateLogic:
         #     if filtering_res != True:
         #         return None, None
 
-        filename = "/home/user/kAFL/out/inputs/payload_%07d" % (self.i)
+        filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
         atomic_write(filename, payload)
         log_save("Saved payload_%07d" % (self.i))
         self.i += 1

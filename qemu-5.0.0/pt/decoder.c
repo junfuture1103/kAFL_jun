@@ -306,39 +306,43 @@ static inline void decoder_handle_fup(decoder_state_machine_t *self, uint64_t ad
 	}
 }
 
+//qemu-5.0.0/pt/decoder.c 수정 후
 static inline uint64_t get_ip_val(uint8_t **pp, uint8_t *end, uint8_t len, uint64_t *last_ip){
 	uint8_t *p = *pp;
 	uint64_t v = *last_ip;
-	uint8_t i;
-	uint8_t shift = 0;
 
-	/* debug */
-	#ifdef QEMU_DEBUG
-	debug("get_ip_val(len=%u, *last_ip=%p) called.", len, *last_ip - 0xfffff8011c4e0000);
-	#endif
+	if (unlikely(!LEFT(len))) {
+		*last_ip = 0;
+		v = 0;
+		return v;
+	}
 
 	switch(len){
 		case 0:
 			v = 0;
 			break;
 		case 1:
+			v = (v & ~0xffffull) | (*(uint64_t *)p & 0xffffull);
+			*pp = p + 2;
+			*last_ip = v;
+			break;
 		case 2:
+			v = (v & ~0xffffffffull) | (*(uint64_t *)p & 0xffffffffull);
+			*pp = p + 4;
+			*last_ip = v;
+			break;
 		case 3:
-			if (unlikely(!LEFT(len))) {
-				*last_ip = 0;
-				v = 0;
-				break;
-			}
-			for (i = 0; i < len; i++, shift += 16, p += 2) {
-				uint64_t b = *(uint16_t *)p;
-				v = (v & ~(0xffffULL << shift)) | (b << shift);
-			}
+			v = (v & ~0xffffffffffffull) | (*(uint64_t *)p & 0xffffffffffffull);
 			v = ((int64_t)(v << (64 - 48))) >> (64 - 48); /* sign extension */
-			*pp = p;
+			*pp = p + 6;
+			*last_ip = v;
+			break;
+		case 4:
+			v = (v & ~0xffffffffffffull) | (*(uint64_t *)p & 0xffffffffffffull);
+			*pp = p + 6;
 			*last_ip = v;
 			break;
 		case 6:
-			/* IP Payload[63:0] */
 			v = *(uint64_t *)p;
 			*pp = p + 8;
 			*last_ip = v;

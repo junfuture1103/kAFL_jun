@@ -101,6 +101,8 @@ class MasterProcess:
 
                 When starting fuzzer for the first time,
                 master process initially receives MSG_READY from the slave.
+
+                msg given by slave
                 """
                 if msg["type"] == MSG_NODE_DONE:
                     # Slave execution done. update queue item and send new task
@@ -118,6 +120,7 @@ class MasterProcess:
                     self.send_next_task(conn)
                 else:
                     raise ValueError("unknown message type {}".format(msg))
+                
             self.statistics.event_slave_poll()
             self.statistics.maybe_write_stats()
 

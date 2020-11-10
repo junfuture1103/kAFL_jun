@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.tcc": "cpp",
+        "random": "cpp",
+        "type_traits": "cpp",
+        "*.def": "cpp",
+        "atomic": "cpp",
+        "string": "cpp",
+        "fstream": "cpp",
+        "*.list": "cpp",
+        "*.inc": "cpp"
+    }
+}

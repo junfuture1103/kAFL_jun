@@ -839,7 +839,7 @@ class qemu:
         except:
             if self.exiting:
                 sys.exit(0)
-            # Qemu crashed. Could be due to prior payload but more likely harness/config is broken..
+            # Qemu ed. Could be due to prior payload but more likely harness/config is broken..
             # print_fail("Failed to set new payload - Qemu crash?")
             # log_qemu("Failed to set new payload - Qemu crash?", self.qemu_id)
             raise Exception('Failed to set new payload - Qemu crash?')
