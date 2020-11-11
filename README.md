@@ -159,3 +159,8 @@ Current developer(s):
 ```
 Steffen Schulz <steffen.schulz@intel.com>
 ```
+
+======================== Update linux kernel ===========================
+
+Please Check this link for update linux kernel
+https://www.notion.so/Upgrade-linux-kernel-intel-Labs-kAFL-48df588049a0473d8bffed417a72de4c
