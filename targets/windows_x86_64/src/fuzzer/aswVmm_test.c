@@ -8,7 +8,7 @@ Designed in consideration of medcored project's all constraints.
 #include <stdint.h>
 #include "kafl_user.h"
 
-#define CODE_MAX_LEN 3
+#define CODE_MAX_LEN 4
 
 typedef enum {false, true} bool;
 
@@ -20,7 +20,7 @@ typedef struct _kAFL_IRP {
 } kAFL_IRP;
 
 kAFL_IRP constraints[] = {
-    // {0xa0006810,0x8,0xffff,0xffff},
+    {0xa0006810,0x8,0xffff,0xffff},
 	{0xa0006814,0x0,0x0,0xffff},
 	{0xa0006818,0x0,0x0,0xffff},
 	{0xa000e804,0x4,0xffff,0xffff}
@@ -88,17 +88,17 @@ int main(int argc, char** argv)
                 buf[j] = '.';
             }
         }
+        
         hprintf("Injecting data... (code: 0x%x, payload: %s, size: %d)\n", decoded_buf.ioctlCode, buf, payload_buffer->size - 1);
         kAFL_hypercall(HYPERCALL_KAFL_ACQUIRE, 0);
         
         /* kernel fuzzing */
         DeviceIoControl(kafl_vuln_handle,
-            0xa000e804,
-            (LPVOID)&payload_buffer->data[0],
-            (DWORD)payload_buffer->size,
+            decoded_buf.ioctlCode,
+            (LPVOID)&payload_buffer->data[1],
+            (DWORD)payload_buffer->size-1,
             (LPVOID)outBuffer,
-            (DWORD)0xffff,
-            // (DWORD)decoded_buf.outputBufferSize,
+            (DWORD)decoded_buf.outputBufferSize,
             NULL,
             NULL
         );

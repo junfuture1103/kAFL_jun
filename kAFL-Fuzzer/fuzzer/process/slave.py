@@ -291,7 +291,7 @@ class SlaveProcess:
                     payload_readable += '.'
                 else:
                     payload_readable += payload[i]
-            
+        
             debug("\033[1;34m[{}]\033[0m payload: {}\t(len={})".format(state, payload_readable, len(payload_readable)))
 
             import kafl_conf
@@ -318,7 +318,7 @@ class SlaveProcess:
                 if crash:
                     debug("\033[1;31m[crash]\033[0m Crash detected!")
                     time.sleep(0.5)
-
+                debug("send_to_master....")
                 self.__send_to_master(data, exec_res, info)
 
         else:
@@ -327,6 +327,7 @@ class SlaveProcess:
                 # log_slave("Crashing input found (%s), but not new (discarding)" % (exec_res.exit_reason), self.slave_id)
                 debug("\033[1;31m[crash]\033[0m Crash detected!")
                 time.sleep(0.5)
+                debug("is not new input!!! send_to_master.... ")
                 self.__send_to_master(data, exec_res, info)
 
         # restart Qemu on crash

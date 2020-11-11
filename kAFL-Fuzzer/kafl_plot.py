@@ -124,7 +124,7 @@ class Graph:
                 (t_str, node_id, parent, method[:12].ljust(12), sample[:42].ljust(42),
                     len(favs), stage[:8], exit[:1].title(), level, perf, score, node.get("state_time_havoc",0)))
 
-        self.dot.add_node(node["id"], label="%s\n[id=%02d, score=%2.2f]\n%s" % (sample[:12], node_id, score, exit), color=color)
+        self.dot.add_node(node["id"], label="ioctl_index = %d, 0x%s\n[id=%02d, score=%2.2f]\n%s" % (payload[0], payload[:13].hex(), node_id, score, exit), color=color)
         self.dot.add_edge(parent, node["id"], headlabel=method, arrowhead='open')
 
         return True

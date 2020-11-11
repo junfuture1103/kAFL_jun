@@ -544,7 +544,7 @@ class qemu:
         self.kafl_shm.seek(0x0)
         self.kafl_shm.write(self.virgin_bitmap)
         self.kafl_shm.flush()
-
+        
         return True
 
     def set_init_state(self):

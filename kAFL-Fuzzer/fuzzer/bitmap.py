@@ -114,7 +114,6 @@ class GlobalBitmap:
         GlobalBitmap.bitmap_native_so.update_global_bitmap(self.c_bitmap, exec_result.cbuffer,
                                                            ctypes.c_uint64(self.bitmap_size))
 
-
 class BitmapStorage:
     """
     BitmapStorage stores 4 GlobalBitmap instances

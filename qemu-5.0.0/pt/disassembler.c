@@ -329,7 +329,7 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 			set_rq_instruction(self->redqueen_state, ins->address);
 		}
 		if(ins->id == X86_INS_XOR && is_interessting_xor_at(self, ins->address)){
-			QEMU_PT_PRINTF(REDQUEEN_PREFIX, "hooking xor %lx", ins->address);
+			// QEMU_PT_PRINTF(REDQUEEN_PREFIX, "hhooking xorooking xor %lx", ins->address);
 			set_rq_instruction(self->redqueen_state, ins->address);
 		}
 		if( ins->id != X86_INS_LEA && (ins->id == X86_INS_RET || ins->id == X86_INS_POP || 
@@ -561,7 +561,7 @@ static inline cofi_list* get_obj(disassembler_t* self, uint64_t entry_point, tnt
 
 	/* test */
 	tmp_entry_point = (entry_point < 0x100000000) ?
-						entry_point | 0xfffff80400000000 :
+						entry_point | 0xfffff80000000000 :
 						entry_point;
 
 	//if (!count_tnt(tnt_cache_state))
@@ -709,7 +709,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 						/* test */
 						if (obj->cofi.target_addr < 0x100000000) {
-							obj->cofi.target_addr |= 0xfffff80400000000;
+							obj->cofi.target_addr |= 0xfffff80000000000;
 						}
 
 						/* call pt_bitmap */
@@ -812,7 +812,7 @@ static inline cofi_list* get_cofi_ptr(disassembler_t* self, cofi_list *obj)
 
 					/* test */
 					if (obj->cofi.target_addr < 0x100000000) {
-						obj->cofi.target_addr |= 0xfffff80400000000;
+						obj->cofi.target_addr |= 0xfffff80000000000;
 					}
 
 					obj->cofi_target_ptr = get_obj(self, obj->cofi.target_addr, tnt_cache_state);
