@@ -409,8 +409,8 @@ class FuzzingStateLogic:
 
         filename = "/home/ubuntu/kAFL/out/inputs/payload_%07d" % (self.i)
         atomic_write(filename, payload)
-        print(payload)
-        print(type(payload))
+        # print(payload)
+        # print(type(payload))
         # log_save("Saved payload_%07d" % (self.i))
         self.i += 1
 

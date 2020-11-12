@@ -46,6 +46,7 @@ class MasterStatistics:
 
         self.stats_file = self.work_dir + "/stats"
         self.plot_file  = self.work_dir + "/stats.csv"
+        self.plot_file_perform  = "~/kAFL/stats_" + str(2) + ".csv"
         # write once so that we have a valid stats file
         self.write_statistics()
 
@@ -115,6 +116,7 @@ class MasterStatistics:
 
         if cur_time - self.plot_last > self.plot_thres:
             self.plot_last = cur_time
+            self.write_performance_plot()
             self.write_plot()
 
     def write_statistics(self):
@@ -140,6 +142,22 @@ class MasterStatistics:
                 self.data["favs_pending"],     # favs pending
                 self.data["total_execs"],      # current total execs
                 self.data["bytes_in_bitmap"],  # unique edges % p(col)
+                ))
+    
+    def write_performance_plot(self):
+        cur_time = time.time()
+        # cur_execs = (self.data["total_execs"] - self.execs_last)/(cur_time-self.execs_time)
+        self.execs_last = self.data["total_execs"]
+        self.execs_time = cur_time
+        with open(self.plot_file_perform, 'a') as fd:
+            fd.write("%06d;%d;%d;%d;%d\n" % (
+                cur_time-self.start_time,
+                self.data["total_execs"],      # current total execs // will use in performance test tool
+                self.data["paths_total"],      # paths total
+                self.data["favs_total"],       # favs total
+                # self.data["max_level"],        # max level
+                # self.data["bytes_in_bitmap"],  # unique edges % p(col)
+                self.data["findings"]["crash"],   # elapsed time      # execs/sec // will use in performance test tool
                 ))
 
 
