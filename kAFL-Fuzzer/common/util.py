@@ -110,6 +110,8 @@ def prepare_working_dir(workdir, purge=False, if_arr=None):
         for folder in folders:
             os.makedirs(workdir + folder)
 
+    # gnuplot_dirname = workdir + '../gnuplot/stats_' + str
+
     return True
 
 def copy_seed_files(working_directory, seed_directory):

@@ -26,7 +26,13 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
         x86_64-w64-mingw32-gcc src/fuzzer/cng_test.c -I ../ -o bin/fuzzer/cng_test.exe -mwindows -Wall
 		printf "\tCompiling MsIo_test...\n"
         x86_64-w64-mingw32-gcc src/fuzzer/MsIo_test.c -I ../ -o bin/fuzzer/MsIo_test.exe -mwindows -Wall
-	
+		printf "\tCompiling input_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/input_test.c -I ../ -o bin/fuzzer/input_test.exe -mwindows -Wall
+		printf "\tCompiling Spark_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/Spark_test.c -I ../ -o bin/fuzzer/Spark_test.exe -mwindows -Wall
+		printf "\tCompiling pdicIo_test...\n"
+        x86_64-w64-mingw32-gcc src/fuzzer/pdicIo_test.c -I ../ -o bin/fuzzer/pdicIo_test.exe -mwindows -Wall
+
 	else
 	printf "\tCould not find x86_64-w64-mingw32-gcc/g++! Skipping..\n\t(Try sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 to fix this)"
 	fi 
